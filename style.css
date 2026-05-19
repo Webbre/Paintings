@@ -7,7 +7,6 @@ body {
     padding: 0;
 }
 
-/* Zorgt ervoor dat afbeeldingen nooit breder worden dan hun container */
 img {
     max-width: 100%;
     height: auto;
@@ -26,8 +25,16 @@ img {
     font-weight: 300;
     font-size: 2.2em;
     margin-top: 0;
-    margin-bottom: 30px;
+    margin-bottom: 10px; /* Iets minder ruimte hieronder vanwege de nieuwe tekst */
     color: #222;
+}
+
+/* De nieuwe opmaak voor de instructietekst */
+.instructie-tekst {
+    color: #666;
+    font-size: 1.05em;
+    margin-bottom: 30px;
+    font-style: italic;
 }
 
 .filter-knoppen {
@@ -56,7 +63,6 @@ img {
 /* --- GALERIJ RASTER (GRID) --- */
 .galerij {
     display: grid;
-    /* Standaard voor mobiel: 1 kolom */
     grid-template-columns: 1fr; 
     gap: 40px;
     max-width: 1200px;
@@ -64,14 +70,12 @@ img {
     padding: 0 20px;
 }
 
-/* Voor tablets (schermen breder dan 768 pixels): 2 kolommen */
 @media (min-width: 768px) {
     .galerij {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-/* Voor desktops (schermen breder dan 1024 pixels): maximaal 3 kolommen */
 @media (min-width: 1024px) {
     .galerij {
         grid-template-columns: repeat(3, 1fr);
@@ -102,17 +106,18 @@ img {
     color: #aaa;
 }
 
+/* AANGEPAST: Klein en in de hoek */
 .status-label {
     position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.7);
+    top: 15px;
+    right: 15px;
+    background-color: rgba(0, 0, 0, 0.75);
     color: white;
-    padding: 10px 20px;
+    padding: 6px 12px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 0.9em;
+    letter-spacing: 1px;
+    font-size: 0.75em;
+    border-radius: 4px;
 }
 
 /* --- LIGHTBOX (VERGROTE FOTO) --- */
@@ -127,19 +132,23 @@ img {
     background-color: rgba(0, 0, 0, 0.85);
 }
 
+/* AANGEPAST: Zorgt dat het formulier beter op het scherm past */
 .lightbox-inhoud {
     background-color: #fff;
-    margin: 5vh auto;
+    margin: 2vh auto; /* Stond op 5vh, nu compacter aan de bovenkant */
     padding: 20px;
     width: 90%;
     max-width: 800px;
+    max-height: 95vh; /* Zorgt dat de box niet groter wordt dan je scherm */
+    overflow-y: auto; /* Voegt een scrollbalk toe als het toch niet past */
     position: relative;
     text-align: center;
     border-radius: 4px;
 }
 
+/* AANGEPAST: De foto iets kleiner gemaakt om ruimte over te houden voor het formulier */
 .lightbox-inhoud img {
-    max-height: 60vh;
+    max-height: 45vh; /* Stond op 60vh */
     width: auto;
     margin: 0 auto;
 }
