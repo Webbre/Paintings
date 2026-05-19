@@ -9,6 +9,8 @@
 <body>
 
     <header class="hoofd-header">
+        <img src="https://picsum.photos/400/600" alt="Dineke Weeber-Walrecht" class="profiel-foto">
+        
         <h1>Overzicht schilderijen Dineke Weeber-Walrecht</h1>
         <p class="instructie-tekst">Klik op een beschikbaar schilderij om deze in detail te bekijken en eventueel direct te reserveren.</p>
         
@@ -21,22 +23,30 @@
 
     <main>
         <div class="galerij">
-            
-        </div>
+            </div>
     </main>
 
     <div id="lightbox" class="lightbox">
         <div class="lightbox-inhoud">
             <span class="sluit-knop">&times;</span>
-            <img id="lightbox-foto" src="" alt="Vergrote foto">
-            <h3 id="lightbox-titel">Titel</h3>
             
-            <div id="reservering-gedeelte">
-                <p>Reserveer dit schilderij:</p>
-                <input type="text" id="koper-naam" placeholder="Jouw naam" required>
-                <input type="email" id="koper-email" placeholder="Jouw e-mailadres" required>
-                <button id="bevestig-reservering" class="reserveren-knop">Bevestig reservering</button>
+            <div class="lightbox-flex-container">
+                <div class="lightbox-links">
+                    <img id="lightbox-foto" src="" alt="Vergrote foto">
+                </div>
+                
+                <div class="lightbox-rechts">
+                    <h3 id="lightbox-titel">Titel</h3>
+                    
+                    <div id="reservering-gedeelte">
+                        <p>Reserveer dit schilderij:</p>
+                        <input type="text" id="koper-naam" placeholder="Jouw naam" required>
+                        <input type="email" id="koper-email" placeholder="Jouw e-mailadres" required>
+                        <button id="bevestig-reservering" class="reserveren-knop">Bevestig reservering</button>
+                    </div>
+                </div>
             </div>
+            
         </div>
     </div>
 
