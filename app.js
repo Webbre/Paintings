@@ -24,7 +24,7 @@ const filterKnoppen = document.querySelectorAll('.filter-knop');
 const koperNaamInput = document.getElementById('koper-naam');
 const koperEmailInput = document.getElementById('koper-email');
 const koperBerichtInput = document.getElementById('koper-bericht');
-const延 bevestigKnop = document.getElementById('bevestig-reservering');
+const bevestigKnop = document.getElementById('bevestig-reservering'); // De typfout is hier netjes weggehaald!
 
 let huidigSchilderijId = null; 
 
