@@ -7,6 +7,11 @@ body {
     padding: 0;
 }
 
+/* Zorgt ervoor dat alle marges netjes naar binnen vallen (Voorkomt het afsnijden van het kruisje) */
+* {
+    box-sizing: border-box;
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -106,7 +111,6 @@ img {
     color: #333;
 }
 
-/* Stijl voor de formaat-labels op de site */
 .formaat-label {
     font-size: 0.9em;
     color: #777;
@@ -152,25 +156,27 @@ img {
 
 .lightbox-inhoud {
     background-color: #fff;
-    margin: 2vh auto; 
-    padding: 30px; 
-    width: 90%;
+    margin: 5vh auto; 
+    /* Op mobiel: minder witte randen aan de zijkant, extra ruimte bovenin voor het kruisje */
+    padding: 45px 15px 20px 15px; 
+    width: 95%; /* Neemt bijna het hele mobiele scherm in beslag */
     max-width: 1100px; 
-    max-height: 95vh; 
+    max-height: 90vh; 
     overflow-y: auto; 
     position: relative;
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 .sluit-knop {
-    color: #999;
+    color: #777;
     position: absolute;
-    top: 10px;
-    right: 20px;
+    top: 5px;
+    right: 15px;
     font-size: 35px;
     font-weight: bold;
     cursor: pointer;
     z-index: 10;
+    line-height: 1;
 }
 
 .sluit-knop:hover {
@@ -189,9 +195,12 @@ img {
     text-align: center;
 }
 
+/* De foto op mobiel */
 .lightbox-links img {
-    max-height: 50vh; 
-    width: auto;
+    width: 100%; /* Forceert de foto om de volledige breedte te gebruiken */
+    height: auto;
+    max-height: 55vh; 
+    object-fit: contain; /* Zorgt dat de foto nooit vervormt */
     margin: 0 auto;
 }
 
@@ -219,9 +228,8 @@ img {
 
 #reservering-gedeelte input,
 #reservering-gedeelte textarea {
-    padding: 10px;
+    padding: 12px; /* Iets groter om makkelijker te typen op mobiel */
     width: 100%;
-    max-width: 300px;
     border: 1px solid #ccc;
     border-radius: 4px;
     text-align: center;
@@ -236,22 +244,31 @@ img {
     background-color: #333;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     cursor: pointer;
     text-transform: uppercase;
     font-size: 0.8em;
     letter-spacing: 1px;
     margin-top: 10px;
     width: 100%;
-    max-width: 300px;
 }
 
 .reserveren-knop:hover {
     background-color: #555;
 }
 
-/* Grote computerschermen layout: foto en tekst netjes naast elkaar */
+/* --- GROTE SCHERMEN (DESKTOP/TABLET) --- */
 @media (min-width: 768px) {
+    .lightbox-inhoud {
+        padding: 30px; 
+        width: 90%;
+    }
+    
+    .sluit-knop {
+        top: 10px;
+        right: 20px;
+    }
+
     .lightbox-flex-container {
         flex-direction: row; 
         align-items: flex-start; 
@@ -262,7 +279,9 @@ img {
         flex: 2; 
     }
     
+    /* De foto op desktop */
     .lightbox-links img {
+        width: auto; 
         max-height: 85vh; 
     }
     
@@ -283,5 +302,6 @@ img {
     #reservering-gedeelte textarea,
     .reserveren-knop {
         text-align: left;
+        max-width: 300px; /* Beperkt de breedte van invulvelden op grote schermen */
     }
 }
