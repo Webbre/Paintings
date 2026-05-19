@@ -7,7 +7,7 @@ body {
     padding: 0;
 }
 
-/* Zorgt ervoor dat alle marges netjes naar binnen vallen (Voorkomt het afsnijden van het kruisje) */
+/* Zorgt ervoor dat alle marges netjes naar binnen vallen */
 * {
     box-sizing: border-box;
 }
@@ -157,9 +157,9 @@ img {
 .lightbox-inhoud {
     background-color: #fff;
     margin: 5vh auto; 
-    /* Op mobiel: minder witte randen aan de zijkant, extra ruimte bovenin voor het kruisje */
-    padding: 45px 15px 20px 15px; 
-    width: 95%; /* Neemt bijna het hele mobiele scherm in beslag */
+    /* Extra ruimte onderin (40px) toegevoegd voor de knop */
+    padding: 45px 15px 40px 15px; 
+    width: 95%; 
     max-width: 1100px; 
     max-height: 90vh; 
     overflow-y: auto; 
@@ -170,8 +170,8 @@ img {
 .sluit-knop {
     color: #777;
     position: absolute;
-    top: 5px;
-    right: 15px;
+    top: 10px; /* Iets naar beneden */
+    right: 20px; /* Verder naar links geschoven zodat hij niet afsnijdt */
     font-size: 35px;
     font-weight: bold;
     cursor: pointer;
@@ -195,12 +195,11 @@ img {
     text-align: center;
 }
 
-/* De foto op mobiel */
 .lightbox-links img {
-    width: 100%; /* Forceert de foto om de volledige breedte te gebruiken */
+    width: 100%; 
     height: auto;
     max-height: 55vh; 
-    object-fit: contain; /* Zorgt dat de foto nooit vervormt */
+    object-fit: contain; 
     margin: 0 auto;
 }
 
@@ -228,7 +227,7 @@ img {
 
 #reservering-gedeelte input,
 #reservering-gedeelte textarea {
-    padding: 12px; /* Iets groter om makkelijker te typen op mobiel */
+    padding: 12px; 
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -244,12 +243,13 @@ img {
     background-color: #333;
     color: white;
     border: none;
-    padding: 12px 20px;
+    padding: 14px 20px; /* Nog iets groter en beter klikbaar gemaakt */
     cursor: pointer;
     text-transform: uppercase;
-    font-size: 0.8em;
+    font-size: 0.85em;
     letter-spacing: 1px;
-    margin-top: 10px;
+    margin-top: 15px; /* Ruimte boven de knop */
+    margin-bottom: 10px; /* Ruimte onder de knop */
     width: 100%;
 }
 
@@ -279,7 +279,6 @@ img {
         flex: 2; 
     }
     
-    /* De foto op desktop */
     .lightbox-links img {
         width: auto; 
         max-height: 85vh; 
@@ -302,6 +301,6 @@ img {
     #reservering-gedeelte textarea,
     .reserveren-knop {
         text-align: left;
-        max-width: 300px; /* Beperkt de breedte van invulvelden op grote schermen */
+        max-width: 300px; 
     }
 }
