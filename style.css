@@ -21,15 +21,24 @@ img {
     border-bottom: 1px solid #eaeaea;
 }
 
+/* NIEUW: Opmaak voor de profielfoto */
+.profiel-foto {
+    width: 140px;
+    height: 140px;
+    object-fit: cover; /* Zorgt dat de staande foto mooi in het midden wordt uitgesneden */
+    border-radius: 50%; /* Maakt het een perfecte cirkel */
+    margin: 0 auto 20px auto; /* Centreert de foto */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
 .hoofd-header h1 {
     font-weight: 300;
     font-size: 2.2em;
     margin-top: 0;
-    margin-bottom: 10px; /* Iets minder ruimte hieronder vanwege de nieuwe tekst */
+    margin-bottom: 10px;
     color: #222;
 }
 
-/* De nieuwe opmaak voor de instructietekst */
 .instructie-tekst {
     color: #666;
     font-size: 1.05em;
@@ -96,7 +105,6 @@ img {
     color: #333;
 }
 
-/* --- GERESERVEERDE OPMAAK --- */
 .schilderij-kaart.gereserveerd img {
     filter: grayscale(100%);
     opacity: 0.3;
@@ -106,7 +114,6 @@ img {
     color: #aaa;
 }
 
-/* AANGEPAST: Klein en in de hoek */
 .status-label {
     position: absolute;
     top: 15px;
@@ -132,25 +139,16 @@ img {
     background-color: rgba(0, 0, 0, 0.85);
 }
 
-/* AANGEPAST: Zorgt dat het formulier beter op het scherm past */
 .lightbox-inhoud {
     background-color: #fff;
-    margin: 2vh auto; /* Stond op 5vh, nu compacter aan de bovenkant */
-    padding: 20px;
+    margin: 2vh auto; 
+    padding: 30px; /* Iets meer ruimte aan de binnenkant */
     width: 90%;
-    max-width: 800px;
-    max-height: 95vh; /* Zorgt dat de box niet groter wordt dan je scherm */
-    overflow-y: auto; /* Voegt een scrollbalk toe als het toch niet past */
+    max-width: 1100px; /* Breder gemaakt zodat alles mooi naast elkaar past */
+    max-height: 95vh; 
+    overflow-y: auto; 
     position: relative;
-    text-align: center;
     border-radius: 4px;
-}
-
-/* AANGEPAST: De foto iets kleiner gemaakt om ruimte over te houden voor het formulier */
-.lightbox-inhoud img {
-    max-height: 45vh; /* Stond op 60vh */
-    width: auto;
-    margin: 0 auto;
 }
 
 .sluit-knop {
@@ -161,17 +159,47 @@ img {
     font-size: 35px;
     font-weight: bold;
     cursor: pointer;
+    z-index: 10;
 }
 
 .sluit-knop:hover {
     color: #000;
 }
 
-/* --- RESERVERING FORMULIER IN LIGHTBOX --- */
+/* NIEUW: Flexbox voor de lightbox inhoud (naast elkaar op grote schermen) */
+.lightbox-flex-container {
+    display: flex;
+    flex-direction: column; /* Op mobiel onder elkaar */
+    align-items: center;
+    gap: 20px;
+}
+
+.lightbox-links {
+    width: 100%;
+    text-align: center;
+}
+
+.lightbox-links img {
+    max-height: 50vh; /* Op mobiel iets groter dan eerst */
+    width: auto;
+    margin: 0 auto;
+}
+
+.lightbox-rechts {
+    width: 100%;
+    text-align: center;
+}
+
+#lightbox-titel {
+    font-size: 1.5em;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+/* Reservering formulier */
 #reservering-gedeelte {
-    margin-top: 20px;
-    padding-top: 20px;
     border-top: 1px solid #eee;
+    padding-top: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -197,8 +225,44 @@ img {
     font-size: 0.8em;
     letter-spacing: 1px;
     margin-top: 10px;
+    width: 100%;
+    max-width: 320px;
 }
 
 .reserveren-knop:hover {
     background-color: #555;
+}
+
+/* Desktop layout: Zet ze naast elkaar! */
+@media (min-width: 768px) {
+    .lightbox-flex-container {
+        flex-direction: row; /* Zet ze naast elkaar */
+        align-items: flex-start; /* Lijn ze bovenin uit */
+        gap: 40px;
+    }
+    
+    .lightbox-links {
+        flex: 2; /* De foto krijgt 2/3 van de ruimte */
+    }
+    
+    .lightbox-links img {
+        max-height: 85vh; /* De foto mag nu héél groot worden! */
+    }
+    
+    .lightbox-rechts {
+        flex: 1; /* Het formulier krijgt 1/3 van de ruimte */
+        text-align: left;
+    }
+    
+    #reservering-gedeelte {
+        border-top: none; /* Lijn bovenin weg */
+        border-left: 1px solid #eee; /* Lijn aan de linkerkant toevoegen */
+        padding-top: 0;
+        padding-left: 30px;
+        align-items: flex-start; /* Lijn invoervelden links uit */
+    }
+    
+    #reservering-gedeelte input, .reserveren-knop {
+        text-align: left;
+    }
 }
