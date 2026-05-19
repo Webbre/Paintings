@@ -1,4 +1,4 @@
-/* --- BASIS INSTELLINGEN --- */
+/* --- BASIS INSTELLEN --- */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #ffffff;
@@ -13,7 +13,7 @@ img {
     display: block;
 }
 
-/* --- HEADER EN FILTERS --- */
+/* --- HEADER EN PROFIELFOTO --- */
 .hoofd-header {
     text-align: center;
     padding: 40px 20px;
@@ -45,6 +45,7 @@ img {
     font-style: italic;
 }
 
+/* --- FILTERKNOPPEN --- */
 .filter-knoppen {
     display: flex;
     justify-content: center;
@@ -101,7 +102,17 @@ img {
     font-weight: normal;
     font-size: 1.1em;
     margin-top: 15px;
+    margin-bottom: 5px;
     color: #333;
+}
+
+/* Stijl voor de formaat-labels op de site */
+.formaat-label {
+    font-size: 0.9em;
+    color: #777;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-style: italic;
 }
 
 .schilderij-kaart.gereserveerd img {
@@ -109,7 +120,8 @@ img {
     opacity: 0.3;
 }
 
-.schilderij-kaart.gereserveerd h3 {
+.schilderij-kaart.gereserveerd h3,
+.schilderij-kaart.gereserveerd .formaat-label {
     color: #aaa;
 }
 
@@ -126,7 +138,7 @@ img {
     border-radius: 4px;
 }
 
-/* --- LIGHTBOX (VERGROTE FOTO) --- */
+/* --- LIGHTBOX (VERGROTE WEERGAVE) --- */
 .lightbox {
     display: none;
     position: fixed;
@@ -191,10 +203,10 @@ img {
 #lightbox-titel {
     font-size: 1.5em;
     margin-top: 0;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
 }
 
-/* Reservering formulier */
+/* Reserveringsformulier binnen lightbox */
 #reservering-gedeelte {
     border-top: 1px solid #eee;
     padding-top: 20px;
@@ -202,9 +214,9 @@ img {
     flex-direction: column;
     gap: 10px;
     align-items: center;
+    width: 100%;
 }
 
-/* NIEUW: textarea meegenomen in de styling */
 #reservering-gedeelte input,
 #reservering-gedeelte textarea {
     padding: 10px;
@@ -213,10 +225,9 @@ img {
     border: 1px solid #ccc;
     border-radius: 4px;
     text-align: center;
-    font-family: inherit; /* Zorgt dat het lettertype hetzelfde blijft */
+    font-family: inherit;
 }
 
-/* Zorgt dat bezoekers het tekstvak alleen verticaal groter kunnen slepen */
 #reservering-gedeelte textarea {
     resize: vertical;
 }
@@ -232,13 +243,14 @@ img {
     letter-spacing: 1px;
     margin-top: 10px;
     width: 100%;
-    max-width: 320px;
+    max-width: 300px;
 }
 
 .reserveren-knop:hover {
     background-color: #555;
 }
 
+/* Grote computerschermen layout: foto en tekst netjes naast elkaar */
 @media (min-width: 768px) {
     .lightbox-flex-container {
         flex-direction: row; 
