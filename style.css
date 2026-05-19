@@ -1,0 +1,116 @@
+/* --- BASIS INSTELLINGEN --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    color: #444;
+    margin: 0;
+    padding: 0;
+}
+
+/* Zorgt ervoor dat afbeeldingen nooit breder worden dan hun container */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* --- HEADER EN FILTERS --- */
+.hoofd-header {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #fafafa;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.hoofd-header h1 {
+    font-weight: 300; /* Maakt de tekst wat dunner en strakker */
+    font-size: 2.2em;
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #222;
+}
+
+.filter-knoppen {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap; /* Zorgt dat knoppen netjes op een nieuwe regel komen op smalle schermen */
+}
+
+.filter-knop {
+    background-color: transparent;
+    border: 1px solid #ccc;
+    padding: 8px 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #555;
+    transition: all 0.3s ease; /* Zorgt voor een soepele overgang bij hover */
+}
+
+.filter-knop:hover, .filter-knop.actief {
+    background-color: #333;
+    color: #fff;
+    border-color: #333;
+}
+
+/* --- GALERIJ RASTER (GRID) --- */
+.galerij {
+    display: grid;
+    /* Standaard voor mobiel: 1 kolom */
+    grid-template-columns: 1fr; 
+    gap: 40px;
+    max-width: 1200px;
+    margin: 60px auto; /* 60px ruimte boven/onder, en netjes gecentreerd in het midden */
+    padding: 0 20px;
+}
+
+/* Voor tablets (schermen breder dan 768 pixels): 2 kolommen */
+@media (min-width: 768px) {
+    .galerij {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Voor desktops (schermen breder dan 1024 pixels): maximaal 3 kolommen */
+@media (min-width: 1024px) {
+    .galerij {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* --- SCHILDERIJ KAARTEN --- */
+.schilderij-kaart {
+    text-align: center;
+    position: relative; /* Nodig om het 'Gereserveerd' label goed te kunnen plaatsen */
+    cursor: pointer; /* Laat een handje zien als je eroverheen gaat */
+}
+
+.schilderij-kaart h3 {
+    font-weight: normal;
+    font-size: 1.1em;
+    margin-top: 15px;
+    color: #333;
+}
+
+/* --- GERESERVEERDE OPMAAK --- */
+.schilderij-kaart.gereserveerd img {
+    filter: grayscale(100%); /* Maakt de foto zwart-wit */
+    opacity: 0.3; /* Maakt de foto deels doorzichtig ('greyed out') */
+}
+
+.schilderij-kaart.gereserveerd h3 {
+    color: #aaa; /* Maakt de titel ook lichter */
+}
+
+.status-label {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Zet de tekst exact in het midden van de foto */
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.9em;
+}
