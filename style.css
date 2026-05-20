@@ -1,306 +1,68 @@
 /* --- BASIS INSTELLEN --- */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #ffffff;
-    color: #444;
-    margin: 0;
-    padding: 0;
-}
-
-/* Zorgt ervoor dat alle marges netjes naar binnen vallen */
-* {
-    box-sizing: border-box;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; color: #444; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
+img { max-width: 100%; height: auto; display: block; }
 
 /* --- HEADER EN PROFIELFOTO --- */
-.hoofd-header {
-    text-align: center;
-    padding: 40px 20px;
-    background-color: #fafafa;
-    border-bottom: 1px solid #eaeaea;
-}
+.hoofd-header { text-align: center; padding: 40px 20px; background-color: #fafafa; border-bottom: 1px solid #eaeaea; }
+.profiel-foto { width: 140px; height: 140px; object-fit: cover; border-radius: 50%; margin: 0 auto 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.hoofd-header h1 { font-weight: 300; font-size: 2.2em; margin-top: 0; margin-bottom: 10px; color: #222; }
+.instructie-tekst { color: #666; font-size: 1.05em; margin-bottom: 15px; font-style: italic; }
 
-.profiel-foto {
-    width: 140px;
-    height: 140px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin: 0 auto 20px auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.hoofd-header h1 {
-    font-weight: 300;
-    font-size: 2.2em;
-    margin-top: 0;
-    margin-bottom: 10px;
-    color: #222;
-}
-
-.instructie-tekst {
-    color: #666;
-    font-size: 1.05em;
-    margin-bottom: 30px;
-    font-style: italic;
-}
+/* NIEUW: Disclaimer opmaak */
+.disclaimer-tekst { max-width: 800px; margin: 0 auto 30px auto; background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; font-size: 0.9em; line-height: 1.5; border-left: 4px solid #ffeeba; text-align: left; }
+.kleine-disclaimer { font-size: 0.8em; color: #888; margin-top: -5px; margin-bottom: 10px; }
 
 /* --- FILTERKNOPPEN --- */
-.filter-knoppen {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.filter-knop {
-    background-color: transparent;
-    border: 1px solid #ccc;
-    padding: 8px 20px;
-    cursor: pointer;
-    font-size: 0.9em;
-    color: #555;
-    transition: all 0.3s ease;
-}
-
-.filter-knop:hover, .filter-knop.actief {
-    background-color: #333;
-    color: #fff;
-    border-color: #333;
-}
+.filter-knoppen { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.filter-knop { background-color: transparent; border: 1px solid #ccc; padding: 8px 20px; cursor: pointer; font-size: 0.9em; color: #555; transition: all 0.3s ease; }
+.filter-knop:hover, .filter-knop.actief { background-color: #333; color: #fff; border-color: #333; }
 
 /* --- GALERIJ RASTER (GRID) --- */
-.galerij {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 40px;
-    max-width: 1200px;
-    margin: 60px auto;
-    padding: 0 20px;
-}
-
-@media (min-width: 768px) {
-    .galerij {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .galerij {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
+.galerij { display: grid; grid-template-columns: 1fr; gap: 40px; max-width: 1200px; margin: 60px auto; padding: 0 20px; }
+@media (min-width: 768px) { .galerij { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .galerij { grid-template-columns: repeat(3, 1fr); } }
 
 /* --- SCHILDERIJ KAARTEN --- */
-.schilderij-kaart {
-    text-align: center;
-    position: relative;
-    cursor: pointer;
-}
+.schilderij-kaart { text-align: center; position: relative; cursor: pointer; }
+.schilderij-kaart h3 { font-weight: normal; font-size: 1.1em; margin-top: 15px; margin-bottom: 5px; color: #333; }
+.formaat-label { font-size: 0.9em; color: #777; margin-top: 0; margin-bottom: 15px; font-style: italic; line-height: 1.4; }
 
-.schilderij-kaart h3 {
-    font-weight: normal;
-    font-size: 1.1em;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    color: #333;
-}
+.schilderij-kaart.gereserveerd img { filter: grayscale(100%); opacity: 0.3; }
+.schilderij-kaart.gereserveerd h3, .schilderij-kaart.gereserveerd .formaat-label { color: #aaa; }
 
-.formaat-label {
-    font-size: 0.9em;
-    color: #777;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-style: italic;
-}
+.status-label { position: absolute; top: 15px; right: 15px; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 6px 12px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75em; border-radius: 4px; }
 
-/* NIEUW: Oude regels die de foto zwart-wit en vaag maakten zijn verwijderd! */
-.schilderij-kaart.gereserveerd img {
-    /* filter en opacity verwijderd, foto blijft nu in kleur */
-}
+/* --- LIGHTBOX --- */
+.lightbox { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); }
+.lightbox-inhoud { background-color: #fff; margin: 5vh auto; padding: 45px 15px 40px 15px; width: 95%; max-width: 1100px; max-height: 90vh; overflow-y: auto; position: relative; border-radius: 8px; }
+.sluit-knop { color: #777; position: absolute; top: 10px; right: 20px; font-size: 35px; font-weight: bold; cursor: pointer; z-index: 10; line-height: 1; }
+.sluit-knop:hover { color: #000; }
+.lightbox-flex-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.lightbox-links { width: 100%; text-align: center; }
+.lightbox-links img { width: 100%; height: auto; max-height: 55vh; object-fit: contain; margin: 0 auto; }
+.lightbox-rechts { width: 100%; text-align: center; }
 
-.schilderij-kaart.gereserveerd h3,
-.schilderij-kaart.gereserveerd .formaat-label {
-    /* Kleur van de tekst blijft nu ook gewoon de originele kleur */
-}
+#lightbox-titel { font-size: 1.5em; margin-top: 0; margin-bottom: 5px; }
 
-.status-label {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: rgba(0, 0, 0, 0.75);
-    color: white;
-    padding: 6px 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.75em;
-    border-radius: 4px;
-}
+/* Reserveringsformulier */
+#reservering-gedeelte { border-top: 1px solid #eee; padding-top: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+#invul-velden { display: flex; flex-direction: column; gap: 10px; width: 100%; align-items: center; }
+#invul-velden input, #invul-velden textarea { padding: 12px; width: 100%; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-family: inherit; }
+#invul-velden textarea { resize: vertical; }
 
-/* --- LIGHTBOX (VERGROTE WEERGAVE) --- */
-.lightbox {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-}
+.reserveren-knop { background-color: #333; color: white; border: none; padding: 14px 20px; cursor: pointer; text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px; margin-top: 15px; margin-bottom: 10px; width: 100%; }
+.reserveren-knop:hover { background-color: #555; }
 
-.lightbox-inhoud {
-    background-color: #fff;
-    margin: 5vh auto;
-    /* Opmaak voor mobiel */
-    padding: 45px 15px 40px 15px;
-    width: 95%;
-    max-width: 1100px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    border-radius: 8px;
-}
-
-.sluit-knop {
-    color: #777;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    font-size: 35px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 10;
-    line-height: 1;
-}
-
-.sluit-knop:hover {
-    color: #000;
-}
-
-.lightbox-flex-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-.lightbox-links {
-    width: 100%;
-    text-align: center;
-}
-
-.lightbox-links img {
-    width: 100%;
-    height: auto;
-    max-height: 55vh;
-    object-fit: contain;
-    margin: 0 auto;
-}
-
-.lightbox-rechts {
-    width: 100%;
-    text-align: center;
-}
-
-#lightbox-titel {
-    font-size: 1.5em;
-    margin-top: 0;
-    margin-bottom: 5px;
-}
-
-/* Reserveringsformulier binnen lightbox */
-#reservering-gedeelte {
-    border-top: 1px solid #eee;
-    padding-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-}
-
-#reservering-gedeelte input,
-#reservering-gedeelte textarea {
-    padding: 12px;
-    width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    text-align: center;
-    font-family: inherit;
-}
-
-#reservering-gedeelte textarea {
-    resize: vertical;
-}
-
-.reserveren-knop {
-    background-color: #333;
-    color: white;
-    border: none;
-    padding: 14px 20px;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-size: 0.85em;
-    letter-spacing: 1px;
-    margin-top: 15px;
-    margin-bottom: 10px;
-    width: 100%;
-}
-
-.reserveren-knop:hover {
-    background-color: #555;
-}
-
-/* --- GROTE SCHERMEN (DESKTOP/TABLET) --- */
+/* --- GROTE SCHERMEN --- */
 @media (min-width: 768px) {
-    .lightbox-inhoud {
-        padding: 30px;
-        width: 90%;
-    }
-
-    .sluit-knop {
-        top: 10px;
-        right: 20px;
-    }
-
-    .lightbox-flex-container {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 40px;
-    }
-
-    .lightbox-links {
-        flex: 2;
-    }
-
-    .lightbox-links img {
-        width: auto;
-        max-height: 85vh;
-    }
-
-    .lightbox-rechts {
-        flex: 1;
-        text-align: left;
-    }
-
-    #reservering-gedeelte {
-        border-top: none;
-        border-left: 1px solid #eee;
-        padding-top: 0;
-        padding-left: 30px;
-        align-items: flex-start;
-    }
-
-    #reservering-gedeelte input,
-    #reservering-gedeelte textarea,
-    .reserveren-knop {
-        text-align: left;
-        max-width: 300px;
-    }
+    .lightbox-inhoud { padding: 30px; width: 90%; }
+    .sluit-knop { top: 10px; right: 20px; }
+    .lightbox-flex-container { flex-direction: row; align-items: flex-start; gap: 40px; }
+    .lightbox-links { flex: 2; }
+    .lightbox-links img { width: auto; max-height: 85vh; }
+    .lightbox-rechts { flex: 1; text-align: left; }
+    #reservering-gedeelte { border-top: none; border-left: 1px solid #eee; padding-top: 0; padding-left: 30px; align-items: flex-start; }
+    #invul-velden { align-items: flex-start; }
+    #invul-velden input, #invul-velden textarea, .reserveren-knop { text-align: left; max-width: 300px; }
 }
