@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beheer - Schilderijen</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f4f9; padding: 40px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #222; }
+        .form-groep { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="file"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #f8f9fa; font-size: 16px; margin-bottom: 10px; }
+        button { background-color: #28a745; color: white; border: none; padding: 12px 20px; cursor: pointer; font-size: 14px; border-radius: 4px; }
+        button:hover { background-color: #218838; }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+        #status-melding { margin-top: 15px; font-weight: bold; color: #0066cc; }
+        
+        ul { list-style-type: none; padding: 0; }
+        li { background: #f9f9f9; margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 10px; border-radius: 4px;}
+        .rij-boven { display: flex; justify-content: space-between; align-items: flex-start; }
+        
+        li.status-gereserveerd { background-color: #fff3cd; border-color: #ffeeba; }
+        .koper-info { display: block; font-size: 0.9em; color: #856404; margin-top: 5px; }
+        .reserve-info { display: block; font-size: 0.85em; color: #666; margin-top: 5px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 3px; }
+        
+        .actie-knoppen { display: flex; gap: 5px; flex-wrap: wrap; }
+        .verwijder-knop { background-color: #dc3545; padding: 6px 12px; }
+        .verwijder-knop:hover { background-color: #c82333; }
+        .beschikbaar-knop { background-color: #007bff; padding: 6px 12px; }
+        .beschikbaar-knop:hover { background-color: #0056b3; }
+        .bewerk-knop { background-color: #ffc107; color: #000; padding: 6px 12px; }
+        .bewerk-knop:hover { background-color: #e0a800; }
+        
+        /* Modal voor het bewerken */
+        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Schilderijen Toevoegen</h1>
+
+        <form id="upload-form">
+            <div class="form-groep">
+                <label>Foto's:</label>
+                <input type="file" id="foto" accept="image/*" multiple required>
+            </div>
+            <div class="form-groep">
+                <label>Formaat:</label>
+                <select id="formaat" required>
+                    <option value="Groot">Groot</option>
+                    <option value="Middelgroot">Middelgroot</option>
+                    <option value="Klein">Klein</option>
+                </select>
+                <label>Type:</label>
+                <select id="type" required>
+                    <option value="Doek">Doek</option>
+                    <option value="Paneel">Paneel</option>
+                    <option value="Papier">Papier</option>
+                </select>
+                <label>Lijst (Vrij invullen):</label>
+                <input type="text" id="lijst" placeholder="Bijv. Eikenhouten lijst, Geen lijst, etc." required>
+            </div>
+            <button type="submit" id="upload-knop">Upload Schilderij(en)</button>
+        </form>
+
+        <div id="status-melding"></div>
+        <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
+        <h2>Huidige schilderijen</h2>
+        <ul id="schilderijen-lijst"><li>Laden...</li></ul>
+    </div>
+
+    <div id="edit-modal">
+        <div class="modal-content">
+            <h3>Specificaties bewerken</h3>
+            <label>Formaat:</label>
+            <select id="edit-formaat">
+                <option value="Groot">Groot</option>
+                <option value="Middelgroot">Middelgroot</option>
+                <option value="Klein">Klein</option>
+            </select>
+            <label>Type:</label>
+            <select id="edit-type">
+                <option value="Doek">Doek</option>
+                <option value="Paneel">Paneel</option>
+                <option value="Papier">Papier</option>
+            </select>
+            <label>Lijst (Vrij invullen):</label>
+            <input type="text" id="edit-lijst" placeholder="Bijv. Eikenhouten lijst">
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="slaBewerkingOp()">Opslaan</button>
+                <button onclick="sluitEditModal()" style="background-color: #6c757d;">Annuleren</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-storage-compat.js"></script>
+
+    <script>
+        // Initieer Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvA_Jck1PO6CDbI1cngZBpxO2ETAb9_GY",
+            authDomain: "paintings-be46b.firebaseapp.com",
+            projectId: "paintings-be46b",
+            storageBucket: "paintings-be46b.firebasestorage.app",
+            messagingSenderId: "176727832277",
+            appId: "1:176727832277:web:aa51107213ed9d7a8b945c"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        const form = document.getElementById('upload-form');
+        const statusMelding = document.getElementById('status-melding');
+        let huidigBewerkId = null;
+
+        // Upload script met automatische nummering
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const bestanden = document.getElementById('foto').files;
+            if (bestanden.length === 0) return;
+
+            document.getElementById('upload-knop').disabled = true;
+            statusMelding.innerText = "Bezig met scannen van huidige nummers... ⏳";
+
+            try {
+                const snapshot = await db.collection('schilderijen').get();
+                let hoogsteNummer = 0;
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.titel) {
+                        const match = data.titel.match(/\d+/);
+                        if (match) {
+                            const getal = parseInt(match[0], 10);
+                            if (getal > hoogsteNummer) hoogsteNummer = getal;
+                        }
+                    }
+                });
+
+                let successAantal = 0;
+                for (let i = 0; i < bestanden.length; i++) {
+                    hoogsteNummer++; 
+                    let volgNummer = hoogsteNummer < 10 ? '0' + hoogsteNummer : hoogsteNummer.toString();
+                    let nieuweTitel = `Schilderij ${volgNummer}`;
+                    
+                    const bestand = bestanden[i];
+                    const extensie = bestand.name.split('.').pop();
+                    const opgeslagenBestandsnaam = `Schilderij_${volgNummer}_${Date.now()}.${extensie}`; 
+
+                    statusMelding.innerText = `Bezig met uploaden: ${nieuweTitel} (${i + 1} van de ${bestanden.length})... ⏳`;
+
+                    const opslagReferentie = storage.ref('fotos/' + opgeslagenBestandsnaam);
+                    await opslagReferentie.put(bestand);
+                    const fotoLink = await opslagReferentie.getDownloadURL();
+
+                    await db.collection('schilderijen').add({
+                        titel: nieuweTitel,
+                        afbeelding_url: fotoLink,
+                        status: 'beschikbaar',
+                        formaat: document.getElementById('formaat').value,
+                        type: document.getElementById('type').value,
+                        lijst: document.getElementById('lijst').value,
+                        reservelijst: []
+                    });
+                    
+                    successAantal++;
+                }
+                
+                statusMelding.innerText = `✅ Klaar! ${successAantal} schilderij(en) succesvol toegevoegd en hernoemd.`;
+                form.reset();
+                laadSchilderijenLijst(); 
+                
+            } catch (error) {
+                console.error(error);
+                statusMelding.innerText = `❌ Er is een fout opgetreden bij het uploaden: ${error.message}`;
+            } finally {
+                document.getElementById('upload-knop').disabled = false;
+            }
+        });
+
+        // Laad script mét ingebouwde foutzoeker
+        async function laadSchilderijenLijst() {
+            const lijst = document.getElementById('schilderijen-lijst');
+            
+            try {
+                const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
+                lijst.innerHTML = ''; // Maak de lijst leeg als we zeker weten dat het is gelukt
+                
+                if (querySnapshot.empty) {
+                    lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
+                    return;
+                }
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+                    if (data.status === 'gereserveerd') li.className = 'status-gereserveerd';
+                    
+                    const f = data.formaat || "Onbekend";
+                    const t = data.type || "Onbekend";
+                    const l = data.lijst ? String(data.lijst) : "Onbekend"; // Zorgt dat dit 100% zeker een tekstveld is
+                    
+                    let infoHtml = `<strong>${data.titel}</strong><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
+                    
+                    if (data.status === 'gereserveerd') {
+                        infoHtml += `<span class="koper-info">👤 <strong>Geclaimd door:</strong> ${data.koper_naam} (${data.koper_email}) - "${data.koper_bericht || ''}"</span>`;
+                        
+                        if (data.reservelijst && data.reservelijst.length > 0) {
+                            data.reservelijst.forEach((res, index) => {
+                                infoHtml += `<span class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</span>`;
+                            });
+                        }
+                    }
+
+                    // Handigheidje: veilige tekstvervanging voor knoppen
+                    const veiligeLijst = l.replace(/'/g, "\\'");
+
+                    li.innerHTML = `
+                        <div class="rij-boven">
+                            <div>${infoHtml}</div>
+                            <div class="actie-knoppen">
+                                <button class="bewerk-knop" onclick="openEditModal('${doc.id}', '${f}', '${t}', '${veiligeLijst}')">Bewerk specs</button>
+                                ${data.status === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${doc.id}')">Annuleer / Schuif door</button>` : ''}
+                                <button class="verwijder-knop" onclick="verwijderSchilderij('${doc.id}')">X</button>
+                            </div>
+                        </div>
+                    `;
+                    lijst.appendChild(li);
+                });
+
+            } catch (error) {
+                // Als Firebase vastloopt, toon het dan op het scherm!
+                lijst.innerHTML = `<li style="color: red; font-weight: bold;">Fout bij laden database: ${error.message}</li>`;
+                console.error("Foutmelding:", error);
+            }
+        }
+
+        // Bewerk Logica
+        window.openEditModal = function(id, f, t, l) {
+            huidigBewerkId = id;
+            document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
+            document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
+            document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
+            document.getElementById('edit-modal').style.display = 'flex';
+        };
+
+        window.sluitEditModal = function() {
+            document.getElementById('edit-modal').style.display = 'none';
+            huidigBewerkId = null;
+        };
+
+        window.slaBewerkingOp = async function() {
+            if(!huidigBewerkId) return;
+            await db.collection("schilderijen").doc(huidigBewerkId).update({
+                formaat: document.getElementById('edit-formaat').value,
+                type: document.getElementById('edit-type').value,
+                lijst: document.getElementById('edit-lijst').value
+            });
+            sluitEditModal();
+            laadSchilderijenLijst();
+        };
+
+        // Doorschuif of annuleer logica
+        window.maakBeschikbaar = async function(id) {
+            const docRef = db.collection("schilderijen").doc(id);
+            const docSnap = await docRef.get();
+            const data = docSnap.data();
+
+            if (data.reservelijst && data.reservelijst.length > 0) {
+                if(confirm("Er staat nog iemand op de reservelijst! Wil je het schilderij toewijzen aan reserve-persoon #1?")) {
+                    const nieuweKoper = data.reservelijst[0];
+                    const nieuweReservelijst = data.reservelijst.slice(1);
+                    await docRef.update({
+                        koper_naam: nieuweKoper.naam,
+                        koper_email: nieuweKoper.email,
+                        koper_bericht: nieuweKoper.bericht || '',
+                        reservelijst: nieuweReservelijst
+                    });
+                    laadSchilderijenLijst();
+                    return;
+                }
+            } 
+            
+            if(confirm("Weet je zeker dat je dit schilderij weer voor iedereen 'beschikbaar' wilt maken? Alle huidige reserveringen worden gewist.")) {
+                await docRef.update({
+                    status: 'beschikbaar',
+                    koper_naam: firebase.firestore.FieldValue.delete(),
+                    koper_email: firebase.firestore.FieldValue.delete(),
+                    koper_bericht: firebase.firestore.FieldValue.delete(),
+                    reservelijst: []
+                });
+                laadSchilderijenLijst();
+            }
+        };
+
+        window.verwijderSchilderij = async function(id) {
+            if(confirm("Verwijderen?")) {
+                await db.collection("schilderijen").doc(id).delete();
+                laadSchilderijenLijst(); 
+            }
+        };
+
+        // Start het laden
+        laadSchilderijenLijst();
+    </script>
+</body>
+</html>
