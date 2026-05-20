@@ -9,7 +9,7 @@ img { max-width: 100%; height: auto; display: block; }
 .hoofd-header h1 { font-weight: 300; font-size: 2.2em; margin-top: 0; margin-bottom: 10px; color: #222; }
 .instructie-tekst { color: #666; font-size: 1.05em; margin-bottom: 15px; font-style: italic; }
 
-/* NIEUW: Disclaimer opmaak */
+/* Disclaimer opmaak */
 .disclaimer-tekst { max-width: 800px; margin: 0 auto 30px auto; background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; font-size: 0.9em; line-height: 1.5; border-left: 4px solid #ffeeba; text-align: left; }
 .kleine-disclaimer { font-size: 0.8em; color: #888; margin-top: -5px; margin-bottom: 10px; }
 
@@ -28,9 +28,7 @@ img { max-width: 100%; height: auto; display: block; }
 .schilderij-kaart h3 { font-weight: normal; font-size: 1.1em; margin-top: 15px; margin-bottom: 5px; color: #333; }
 .formaat-label { font-size: 0.9em; color: #777; margin-top: 0; margin-bottom: 15px; font-style: italic; line-height: 1.4; }
 
-.schilderij-kaart.gereserveerd img { filter: grayscale(100%); opacity: 0.3; }
-.schilderij-kaart.gereserveerd h3, .schilderij-kaart.gereserveerd .formaat-label { color: #aaa; }
-
+/* Het gereserveerd-label in de hoek */
 .status-label { position: absolute; top: 15px; right: 15px; background-color: rgba(0, 0, 0, 0.75); color: white; padding: 6px 12px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75em; border-radius: 4px; }
 
 /* --- LIGHTBOX --- */
