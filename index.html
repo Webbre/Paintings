@@ -11,7 +11,9 @@
     <header class="hoofd-header">
         <img src="https://firebasestorage.googleapis.com/v0/b/paintings-be46b.firebasestorage.app/o/Painter.png?alt=media&token=cbb347b8-0656-44de-9916-6986d494cf02" alt="Dineke Weeber-Walrecht" class="profiel-foto">
         <h1>Overzicht schilderijen Dineke Weeber-Walrecht</h1>
-        <p class="instructie-tekst">Klik op een beschikbaar schilderij om deze in detail te bekijken en eventueel direct te reserveren.</p>
+        <p class="instructie-tekst">Klik op een beschikbaar schilderij om deze te bekijken en te reserveren.</p>
+        
+        <p class="disclaimer-tekst"><strong>Let op:</strong> De omlijstingen (de frames) op de foto's zijn digitaal ter illustratie toegevoegd met AI. Kijk bij de specificaties van het schilderij of er daadwerkelijk een lijst wordt meegeleverd.</p>
         
         <div class="filter-knoppen">
             <button class="filter-knop actief">Alles</button>
@@ -39,12 +41,15 @@
                     <p id="lightbox-formaat" class="formaat-label"></p>
                     
                     <div id="reservering-gedeelte">
-                        <p>Reserveer dit schilderij:</p>
-                        <input type="text" id="koper-naam" placeholder="Jouw naam" required>
-                        <input type="email" id="koper-email" placeholder="Jouw e-mailadres" required>
-                        <textarea id="koper-bericht" placeholder="Optioneel: Laat een berichtje achter..." rows="3"></textarea>
+                        <p id="formulier-titel">Reserveer dit schilderij:</p>
+                        <p class="kleine-disclaimer"><em>(De afgebeelde lijst dient enkel ter illustratie)</em></p>
                         
-                        <button id="bevestig-reservering" class="reserveren-knop">Bevestig reservering</button>
+                        <div id="invul-velden">
+                            <input type="text" id="koper-naam" placeholder="Jouw naam" required>
+                            <input type="email" id="koper-email" placeholder="Jouw e-mailadres" required>
+                            <textarea id="koper-bericht" placeholder="Optioneel: Laat een berichtje achter..." rows="3"></textarea>
+                            <button id="bevestig-reservering" class="reserveren-knop">Bevestig reservering</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,7 +59,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
-
     <script src="app.js"></script>
 </body>
 </html>
