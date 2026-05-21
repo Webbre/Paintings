@@ -40,6 +40,14 @@
         #login-scherm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; align-items: center; justify-content: center; z-index: 2000; }
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
         
+        /* Styling voor het logo op het inlogscherm */
+        .login-logo {
+            display: block;
+            margin: 0 auto 25px auto;
+            max-width: 180px;
+            height: auto;
+        }
+        
         /* Modal voor het bewerken */
         #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
@@ -51,7 +59,9 @@
 
     <div id="login-scherm">
         <div class="login-box">
-            <h2 style="margin-top:0;">Beheer Inloggen</h2>
+            <img src="login-logo.png" alt="Dineke Schilderijen Logo" class="login-logo">
+            
+            <h2 style="margin-top:0; text-align: center;">Beheer Inloggen</h2>
             <form id="login-form">
                 <label>E-mailadres:</label>
                 <input type="email" id="login-email" required placeholder="jouw@email.nl">
@@ -147,7 +157,7 @@
         const loginError = document.getElementById('login-error');
         let huidigBewerkId = null;
 
-        // AUTH OBSERVABLE: Regelt wat er getoond wordt op basis van wel/niet ingelogd
+        // Regelt de status van het inloggen
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('admin-paneel').style.display = 'block';
@@ -344,24 +354,4 @@
                 }
             } 
             
-            if(confirm("Weet je zeker dat je dit schilderij weer voor iedereen 'beschikbaar' wilt maken? Alle huidige reserveringen worden gewist.")) {
-                await docRef.update({
-                    status: 'beschikbaar',
-                    koper_naam: firebase.firestore.FieldValue.delete(),
-                    koper_email: firebase.firestore.FieldValue.delete(),
-                    koper_bericht: firebase.firestore.FieldValue.delete(),
-                    reservelijst: []
-                });
-                laadSchilderijenLijst();
-            }
-        };
-
-        window.verwijderSchilderij = async function(id) {
-            if(confirm("Verwijderen?")) {
-                await db.collection("schilderijen").doc(id).delete();
-                laadSchilderijenLijst(); 
-            }
-        };
-    </script>
-</body>
-</html>
+            if(confirm("Weet je zeker dat je dit schilderij weer voor iedereen 'beschikbaar' wilt maken?
