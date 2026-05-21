@@ -32,27 +32,12 @@ let huidigeStatus = null;
 let huidigeStatusFilter = 'alles';
 let huidigeFormaatFilter = 'Alles';
 
-// De debug container (Röntgen-bril)
-const debugBalk = document.createElement('div');
-debugBalk.style.backgroundColor = '#007bff';
-debugBalk.style.color = 'white';
-debugBalk.style.padding = '10px';
-debugBalk.style.marginBottom = '20px';
-debugBalk.style.borderRadius = '5px';
-debugBalk.style.textAlign = 'center';
-debugBalk.style.fontWeight = 'bold';
-debugBalk.innerHTML = 'Systeem wordt gestart...';
-galerijContainer.parentElement.insertBefore(debugBalk, galerijContainer); // Zet hem boven de galerij
-
 async function laadSchilderijen() {
     galerijContainer.innerHTML = '<p style="text-align: center; width: 100%;">Schilderijen laden... ⏳</p>'; 
     
     try {
         const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
         galerijContainer.innerHTML = ''; 
-
-        // RÖNTGEN: Hoeveel zitten er in de database?
-        let totaalGevonden = querySnapshot.size;
         
         querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -119,14 +104,11 @@ async function laadSchilderijen() {
             galerijContainer.appendChild(kaart);
         });
         
-        // Stuur de gevonden data naar de filter
-        pasFiltersToe(totaalGevonden);
+        pasFiltersToe();
 
     } catch (error) {
         console.error(error);
         galerijContainer.innerHTML = `<p style="color: red; text-align: center; width: 100%; font-weight: bold;">Fout bij inladen: ${error.message}</p>`;
-        debugBalk.style.backgroundColor = 'red';
-        debugBalk.innerHTML = `🚨 Fout: ${error.message}`;
     }
 }
 
@@ -192,9 +174,8 @@ if (formaatDropdown) {
     });
 }
 
-function pasFiltersToe(totaalGevonden = "Onbekend") {
+function pasFiltersToe() {
     const alleKaarten = document.querySelectorAll('.schilderij-kaart');
-    let zichtbaarAantal = 0;
 
     alleKaarten.forEach(kaart => {
         let magTonenStatus = false;
@@ -208,14 +189,10 @@ function pasFiltersToe(totaalGevonden = "Onbekend") {
 
         if (magTonenStatus && magTonenFormaat) {
             kaart.style.display = '';
-            zichtbaarAantal++;
         } else {
             kaart.style.display = 'none';
         }
     });
-    
-    // RÖNTGEN-UPDATE: Update de blauwe balk met de uitkomst!
-    debugBalk.innerHTML = `🔍 Database vond: ${totaalGevonden} schilderijen | Filter staat op: '${huidigeStatusFilter}' & '${huidigeFormaatFilter}' | Zichtbaar op scherm: ${zichtbaarAantal}`;
 }
 
 laadSchilderijen();
