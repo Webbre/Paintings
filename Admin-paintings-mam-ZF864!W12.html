@@ -36,8 +36,8 @@
         .uitlog-knop { background-color: #6c757d; float: right; padding: 8px 15px; font-size: 12px; margin-top: -5px; }
         .uitlog-knop:hover { background-color: #5a6268; }
         
-        /* Inlogscherm stijl */
-        #login-scherm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; align-items: center; justify-content: center; z-index: 2000; }
+        /* Inlogscherm is nu standaard ZICHTBAAR (display: flex in plaats van none) */
+        #login-scherm { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; align-items: center; justify-content: center; z-index: 2000; }
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
         
         /* Styling voor het logo op het inlogscherm */
@@ -59,7 +59,7 @@
 
     <div id="login-scherm">
         <div class="login-box">
-            <img src="login-logo.png" alt="Dineke Schilderijen Logo" class="login-logo">
+            <img src="login-logo.png" alt="Dineke Schilderijen Logo" class="login-logo" onerror="this.style.display='none'">
             
             <h2 style="margin-top:0; text-align: center;">Beheer Inloggen</h2>
             <form id="login-form">
@@ -138,220 +138,248 @@
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-storage-compat.js"></script>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBvA_Jck1PO6CDbI1cngZBpxO2ETAb9_GY",
-            authDomain: "paintings-be46b.firebaseapp.com",
-            projectId: "paintings-be46b",
-            storageBucket: "paintings-be46b.firebasestorage.app",
-            messagingSenderId: "176727832277",
-            appId: "1:176727832277:web:aa51107213ed9d7a8b945c"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-        const auth = firebase.auth();
-
-        const form = document.getElementById('upload-form');
-        const loginForm = document.getElementById('login-form');
-        const statusMelding = document.getElementById('status-melding');
-        const loginError = document.getElementById('login-error');
-        let huidigBewerkId = null;
-
-        // Regelt de status van het inloggen
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('admin-paneel').style.display = 'block';
-                document.getElementById('login-scherm').style.display = 'none';
-                laadSchilderijenLijst();
-            } else {
-                document.getElementById('admin-paneel').style.display = 'none';
-                document.getElementById('login-scherm').style.display = 'flex';
-            }
-        });
-
-        // Login logica
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const wachtwoord = document.getElementById('login-wachtwoord').value;
-            loginError.innerText = "Bezig met inloggen... ⏳";
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyBvA_Jck1PO6CDbI1cngZBpxO2ETAb9_GY",
+                authDomain: "paintings-be46b.firebaseapp.com",
+                projectId: "paintings-be46b",
+                storageBucket: "paintings-be46b.firebasestorage.app",
+                messagingSenderId: "176727832277",
+                appId: "1:176727832277:web:aa51107213ed9d7a8b945c"
+            };
+            firebase.initializeApp(firebaseConfig);
             
-            try {
-                await auth.signInWithEmailAndPassword(email, wachtwoord);
-                loginError.innerText = "";
-            } catch (error) {
-                console.error(error);
-                loginError.innerText = "❌ Inloggen mislukt. Controleer e-mail en wachtwoord.";
-            }
-        });
+            const db = firebase.firestore();
+            const storage = firebase.storage();
+            const auth = firebase.auth();
 
-        // Uitlog logica
-        window.uitloggen = function() {
-            auth.signOut();
-        };
+            const form = document.getElementById('upload-form');
+            const loginForm = document.getElementById('login-form');
+            const statusMelding = document.getElementById('status-melding');
+            const loginError = document.getElementById('login-error');
+            let huidigBewerkId = null;
 
-        // Upload script met automatische nummering
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault(); 
-            const bestanden = document.getElementById('foto').files;
-            if (bestanden.length === 0) return;
+            // Regelt de status van het inloggen
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Als ingelogd: Verberg inlogscherm, toon admin paneel
+                    document.getElementById('login-scherm').style.display = 'none';
+                    document.getElementById('admin-paneel').style.display = 'block';
+                    laadSchilderijenLijst();
+                } else {
+                    // Als niet ingelogd: Toon inlogscherm, verberg admin paneel
+                    document.getElementById('login-scherm').style.display = 'flex';
+                    document.getElementById('admin-paneel').style.display = 'none';
+                }
+            });
 
-            document.getElementById('upload-knop').disabled = true;
-            statusMelding.innerText = "Bezig met scannen van huidige nummers... ⏳";
-
-            try {
-                const snapshot = await db.collection('schilderijen').get();
-                let hoogsteNummer = 0;
+            // Login logica
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const wachtwoord = document.getElementById('login-wachtwoord').value;
+                loginError.innerText = "Bezig met inloggen... ⏳";
                 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.titel) {
-                        const match = data.titel.match(/\d+/);
-                        if (match) {
-                            const getal = parseInt(match[0], 10);
-                            if (getal > hoogsteNummer) hoogsteNummer = getal;
-                        }
-                    }
-                });
+                try {
+                    await auth.signInWithEmailAndPassword(email, wachtwoord);
+                    loginError.innerText = "";
+                } catch (error) {
+                    console.error(error);
+                    loginError.innerText = "❌ Inloggen mislukt. Controleer e-mail en wachtwoord.";
+                }
+            });
 
-                let successAantal = 0;
-                for (let i = 0; i < bestanden.length; i++) {
-                    hoogsteNummer++; 
-                    let volgNummer = hoogsteNummer < 10 ? '0' + hoogsteNummer : hoogsteNummer.toString();
-                    let nieuweTitel = `Schilderij ${volgNummer}`;
+            // Uitlog logica
+            window.uitloggen = function() {
+                auth.signOut();
+            };
+
+            // Upload script
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); 
+                const bestanden = document.getElementById('foto').files;
+                if (bestanden.length === 0) return;
+
+                document.getElementById('upload-knop').disabled = true;
+                statusMelding.innerText = "Bezig met scannen van huidige nummers... ⏳";
+
+                try {
+                    const snapshot = await db.collection('schilderijen').get();
+                    let hoogsteNummer = 0;
                     
-                    const bestand = bestanden[i];
-                    const extensie = bestand.name.split('.').pop();
-                    const opgeslagenBestandsnaam = `Schilderij_${volgNummer}_${Date.now()}.${extensie}`; 
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.titel) {
+                            const match = data.titel.match(/\d+/);
+                            if (match) {
+                                const getal = parseInt(match[0], 10);
+                                if (getal > hoogsteNummer) hoogsteNummer = getal;
+                            }
+                        }
+                    });
 
-                    statusMelding.innerText = `Bezig met uploaden: ${nieuweTitel} (${i + 1} van de ${bestanden.length})... ⏳`;
+                    let successAantal = 0;
+                    for (let i = 0; i < bestanden.length; i++) {
+                        hoogsteNummer++; 
+                        let volgNummer = hoogsteNummer < 10 ? '0' + hoogsteNummer : hoogsteNummer.toString();
+                        let nieuweTitel = `Schilderij ${volgNummer}`;
+                        
+                        const bestand = bestanden[i];
+                        const extensie = bestand.name.split('.').pop();
+                        const opgeslagenBestandsnaam = `Schilderij_${volgNummer}_${Date.now()}.${extensie}`; 
 
-                    const opslagReferentie = storage.ref('fotos/' + opgeslagenBestandsnaam);
-                    await opslagReferentie.put(bestand);
-                    const fotoLink = await opslagReferentie.getDownloadURL();
+                        statusMelding.innerText = `Bezig met uploaden: ${nieuweTitel} (${i + 1} van de ${bestanden.length})... ⏳`;
 
-                    await db.collection('schilderijen').add({
-                        titel: nieuweTitel,
-                        afbeelding_url: fotoLink,
+                        const opslagReferentie = storage.ref('fotos/' + opgeslagenBestandsnaam);
+                        await opslagReferentie.put(bestand);
+                        const fotoLink = await opslagReferentie.getDownloadURL();
+
+                        await db.collection('schilderijen').add({
+                            titel: nieuweTitel,
+                            afbeelding_url: fotoLink,
+                            status: 'beschikbaar',
+                            formaat: document.getElementById('formaat').value,
+                            type: document.getElementById('type').value,
+                            lijst: document.getElementById('lijst').value,
+                            reservelijst: []
+                        });
+                        
+                        successAantal++;
+                    }
+                    
+                    statusMelding.innerText = `✅ Klaar! ${successAantal} schilderij(en) succesvol toegevoegd en hernoemd.`;
+                    form.reset();
+                    laadSchilderijenLijst(); 
+                    
+                } catch (error) {
+                    console.error(error);
+                    statusMelding.innerText = `❌ Er is een fout opgetreden bij het uploaden: ${error.message}`;
+                } finally {
+                    document.getElementById('upload-knop').disabled = false;
+                }
+            });
+
+            // Laad script
+            async function laadSchilderijenLijst() {
+                const lijst = document.getElementById('schilderijen-lijst');
+                try {
+                    const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
+                    lijst.innerHTML = '';
+                    
+                    if (querySnapshot.empty) {
+                        lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const li = document.createElement('li');
+                        if (data.status === 'gereserveerd') li.className = 'status-gereserveerd';
+                        
+                        const f = data.formaat || "Onbekend";
+                        const t = data.type || "Onbekend";
+                        const l = data.lijst ? String(data.lijst) : "Onbekend";
+                        
+                        let infoHtml = `<strong>${data.titel}</strong><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
+                        
+                        if (data.status === 'gereserveerd') {
+                            infoHtml += `<span class="koper-info">👤 <strong>Geclaimd door:</strong> ${data.koper_naam} (${data.koper_email}) - "${data.koper_bericht || ''}"</span>`;
+                            
+                            if (data.reservelijst && data.reservelijst.length > 0) {
+                                data.reservelijst.forEach((res, index) => {
+                                    infoHtml += `<span class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</span>`;
+                                });
+                            }
+                        }
+
+                        const veiligeLijst = l.replace(/'/g, "\\'");
+
+                        li.innerHTML = `
+                            <div class="rij-boven">
+                                <div>${infoHtml}</div>
+                                <div class="actie-knoppen">
+                                    <button class="bewerk-knop" onclick="openEditModal('${doc.id}', '${f}', '${t}', '${veiligeLijst}')">Bewerk specs</button>
+                                    ${data.status === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${doc.id}')">Annuleer / Schuif door</button>` : ''}
+                                    <button class="verwijder-knop" onclick="verwijderSchilderij('${doc.id}')">X</button>
+                                </div>
+                            </div>
+                        `;
+                        lijst.appendChild(li);
+                    });
+
+                } catch (error) {
+                    lijst.innerHTML = `<li style="color: red; font-weight: bold;">Fout bij laden database: ${error.message}</li>`;
+                }
+            }
+
+            // Bewerk Logica
+            window.openEditModal = function(id, f, t, l) {
+                huidigBewerkId = id;
+                document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
+                document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
+                document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
+                document.getElementById('edit-modal').style.display = 'flex';
+            };
+
+            window.sluitEditModal = function() {
+                document.getElementById('edit-modal').style.display = 'none';
+                huidigBewerkId = null;
+            };
+
+            window.slaBewerkingOp = async function() {
+                if(!huidigBewerkId) return;
+                await db.collection("schilderijen").doc(huidigBewerkId).update({
+                    formaat: document.getElementById('edit-formaat').value,
+                    type: document.getElementById('edit-type').value,
+                    lijst: document.getElementById('edit-lijst').value
+                });
+                sluitEditModal();
+                laadSchilderijenLijst();
+            };
+
+            // Doorschuif of annuleer logica
+            window.maakBeschikbaar = async function(id) {
+                const docRef = db.collection("schilderijen").doc(id);
+                const docSnap = await docRef.get();
+                const data = docSnap.data();
+
+                if (data.reservelijst && data.reservelijst.length > 0) {
+                    if(confirm("Er staat nog iemand op de reservelijst! Wil je het schilderij toewijzen aan reserve-persoon #1?")) {
+                        const nieuweKoper = data.reservelijst[0];
+                        const nieuweReservelijst = data.reservelijst.slice(1);
+                        await docRef.update({
+                            koper_naam: nieuweKoper.naam,
+                            koper_email: nieuweKoper.email,
+                            koper_bericht: nieuweKoper.bericht || '',
+                            reservelijst: nieuweReservelijst
+                        });
+                        laadSchilderijenLijst();
+                        return;
+                    }
+                } 
+                
+                if(confirm("Weet je zeker dat je dit schilderij weer voor iedereen 'beschikbaar' wilt maken? Alle huidige reserveringen worden gewist.")) {
+                    await docRef.update({
                         status: 'beschikbaar',
-                        formaat: document.getElementById('formaat').value,
-                        type: document.getElementById('type').value,
-                        lijst: document.getElementById('lijst').value,
+                        koper_naam: firebase.firestore.FieldValue.delete(),
+                        koper_email: firebase.firestore.FieldValue.delete(),
+                        koper_bericht: firebase.firestore.FieldValue.delete(),
                         reservelijst: []
                     });
-                    
-                    successAantal++;
-                }
-                
-                statusMelding.innerText = `✅ Klaar! ${successAantal} schilderij(en) succesvol toegevoegd en hernoemd.`;
-                form.reset();
-                laadSchilderijenLijst(); 
-                
-            } catch (error) {
-                console.error(error);
-                statusMelding.innerText = `❌ Er is een fout opgetreden bij het uploaden: ${error.message}`;
-            } finally {
-                document.getElementById('upload-knop').disabled = false;
-            }
-        });
-
-        // Laad script
-        async function laadSchilderijenLijst() {
-            const lijst = document.getElementById('schilderijen-lijst');
-            try {
-                const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
-                lijst.innerHTML = '';
-                
-                if (querySnapshot.empty) {
-                    lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
-                    return;
-                }
-                
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const li = document.createElement('li');
-                    if (data.status === 'gereserveerd') li.className = 'status-gereserveerd';
-                    
-                    const f = data.formaat || "Onbekend";
-                    const t = data.type || "Onbekend";
-                    const l = data.lijst ? String(data.lijst) : "Onbekend";
-                    
-                    let infoHtml = `<strong>${data.titel}</strong><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
-                    
-                    if (data.status === 'gereserveerd') {
-                        infoHtml += `<span class="koper-info">👤 <strong>Geclaimd door:</strong> ${data.koper_naam} (${data.koper_email}) - "${data.koper_bericht || ''}"</span>`;
-                        
-                        if (data.reservelijst && data.reservelijst.length > 0) {
-                            data.reservelijst.forEach((res, index) => {
-                                infoHtml += `<span class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</span>`;
-                            });
-                        }
-                    }
-
-                    const veiligeLijst = l.replace(/'/g, "\\'");
-
-                    li.innerHTML = `
-                        <div class="rij-boven">
-                            <div>${infoHtml}</div>
-                            <div class="actie-knoppen">
-                                <button class="bewerk-knop" onclick="openEditModal('${doc.id}', '${f}', '${t}', '${veiligeLijst}')">Bewerk specs</button>
-                                ${data.status === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${doc.id}')">Annuleer / Schuif door</button>` : ''}
-                                <button class="verwijder-knop" onclick="verwijderSchilderij('${doc.id}')">X</button>
-                            </div>
-                        </div>
-                    `;
-                    lijst.appendChild(li);
-                });
-
-            } catch (error) {
-                lijst.innerHTML = `<li style="color: red; font-weight: bold;">Fout bij laden database: ${error.message}</li>`;
-            }
-        }
-
-        // Bewerk Logica
-        window.openEditModal = function(id, f, t, l) {
-            huidigBewerkId = id;
-            document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
-            document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
-            document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
-            document.getElementById('edit-modal').style.display = 'flex';
-        };
-
-        window.sluitEditModal = function() {
-            document.getElementById('edit-modal').style.display = 'none';
-            huidigBewerkId = null;
-        };
-
-        window.slaBewerkingOp = async function() {
-            if(!huidigBewerkId) return;
-            await db.collection("schilderijen").doc(huidigBewerkId).update({
-                formaat: document.getElementById('edit-formaat').value,
-                type: document.getElementById('edit-type').value,
-                lijst: document.getElementById('edit-lijst').value
-            });
-            sluitEditModal();
-            laadSchilderijenLijst();
-        };
-
-        // Doorschuif of annuleer logica
-        window.maakBeschikbaar = async function(id) {
-            const docRef = db.collection("schilderijen").doc(id);
-            const docSnap = await docRef.get();
-            const data = docSnap.data();
-
-            if (data.reservelijst && data.reservelijst.length > 0) {
-                if(confirm("Er staat nog iemand op de reservelijst! Wil je het schilderij toewijzen aan reserve-persoon #1?")) {
-                    const nieuweKoper = data.reservelijst[0];
-                    const nieuweReservelijst = data.reservelijst.slice(1);
-                    await docRef.update({
-                        koper_naam: nieuweKoper.naam,
-                        koper_email: nieuweKoper.email,
-                        koper_bericht: nieuweKoper.bericht || '',
-                        reservelijst: nieuweReservelijst
-                    });
                     laadSchilderijenLijst();
-                    return;
                 }
-            } 
+            };
+
+            window.verwijderSchilderij = async function(id) {
+                if(confirm("Verwijderen?")) {
+                    await db.collection("schilderijen").doc(id).delete();
+                    laadSchilderijenLijst(); 
+                }
+            };
             
-            if(confirm("Weet je zeker dat je dit schilderij weer voor iedereen 'beschikbaar' wilt maken?
+        } catch (error) {
+            document.getElementById('login-error').innerText = "Systeemfout bij laden: " + error.message;
+        }
+    </script>
+</body>
+</html>
