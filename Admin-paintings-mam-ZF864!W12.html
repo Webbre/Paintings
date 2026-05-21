@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beheer - Schilderijen</title>
+    <title>Beheerportaal</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f4f9; padding: 40px; color: #333; margin: 0; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -61,7 +61,7 @@
         <div class="login-box">
             <img src="login-logo.png" alt="Dineke Schilderijen Logo" class="login-logo" onerror="this.style.display='none'">
             
-            <h2 style="margin-top:0; text-align: center;">Beheer Inloggen</h2>
+            <h2 style="margin-top:0; text-align: center;">Beheer login</h2>
             <form id="login-form">
                 <label>E-mailadres:</label>
                 <input type="email" id="login-email" required placeholder="jouw@email.nl">
@@ -75,7 +75,7 @@
 
     <div id="admin-paneel" class="container">
         <button class="uitlog-knop" onclick="uitloggen()">Uitloggen</button>
-        <h1>Schilderijen Toevoegen</h1>
+        <h1>Schilderijen toevoegen</h1>
 
         <form id="upload-form">
             <div class="form-groep">
@@ -96,9 +96,9 @@
                     <option value="Papier">Papier</option>
                 </select>
                 <label>Lijst (Vrij invullen):</label>
-                <input type="text" id="lijst" placeholder="Bijv. Eikenhouten lijst, Geen lijst, etc." required>
+                <input type="text" id="lijst" placeholder="Bijv. Eikenhouten lijst, geen lijst, etc." required>
             </div>
-            <button type="submit" id="upload-knop">Upload Schilderij(en)</button>
+            <button type="submit" id="upload-knop">Upload schilderij(en)</button>
         </form>
 
         <div id="status-melding"></div>
@@ -109,7 +109,7 @@
 
     <div id="edit-modal">
         <div class="modal-content">
-            <h3>Specificaties bewerken</h3>
+            <h3>Specs bewerken</h3>
             <label>Formaat:</label>
             <select id="edit-formaat">
                 <option value="Groot">Groot</option>
