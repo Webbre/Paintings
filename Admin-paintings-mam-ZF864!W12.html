@@ -1,28 +1,21 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <script>
-    const wachtwoord = prompt("Voer het beheerderswachtwoord in:");
-    // Verander de tekst tussen de aanhalingstekens hieronder naar jouw eigen wachtwoord
-    if (wachtwoord !== "Scheltemaheerd75!") { 
-        document.write("<h2 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Toegang geweigerd. Ververs de pagina om het opnieuw te proberen.</h2>");
-        window.stop();
-    }
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beheer - Schilderijen</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f4f9; padding: 40px; color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f4f9; padding: 40px; color: #333; margin: 0; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1, h2 { color: #222; }
         .form-groep { margin-bottom: 20px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="file"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #f8f9fa; font-size: 16px; margin-bottom: 10px; }
+        input[type="file"], input[type="text"], input[type="email"], input[type="password"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #f8f9fa; font-size: 16px; margin-bottom: 10px; }
         button { background-color: #28a745; color: white; border: none; padding: 12px 20px; cursor: pointer; font-size: 14px; border-radius: 4px; }
         button:hover { background-color: #218838; }
         button:disabled { background-color: #aaa; cursor: not-allowed; }
-        #status-melding { margin-top: 15px; font-weight: bold; color: #0066cc; }
+        #status-melding, #login-error { margin-top: 15px; font-weight: bold; color: #0066cc; }
+        #login-error { color: #dc3545; }
         
         ul { list-style-type: none; padding: 0; }
         li { background: #f9f9f9; margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 10px; border-radius: 4px;}
@@ -40,14 +33,38 @@
         .bewerk-knop { background-color: #ffc107; color: #000; padding: 6px 12px; }
         .bewerk-knop:hover { background-color: #e0a800; }
         
+        .uitlog-knop { background-color: #6c757d; float: right; padding: 8px 15px; font-size: 12px; margin-top: -5px; }
+        .uitlog-knop:hover { background-color: #5a6268; }
+        
+        /* Inlogscherm stijl */
+        #login-scherm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; align-items: center; justify-content: center; z-index: 2000; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
+        
         /* Modal voor het bewerken */
         #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
+        
+        #admin-paneel { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div id="login-scherm">
+        <div class="login-box">
+            <h2 style="margin-top:0;">Beheer Inloggen</h2>
+            <form id="login-form">
+                <label>E-mailadres:</label>
+                <input type="email" id="login-email" required placeholder="jouw@email.nl">
+                <label>Wachtwoord:</label>
+                <input type="password" id="login-wachtwoord" required placeholder="******">
+                <button type="submit" style="width:100%; margin-top:10px;">Inloggen</button>
+            </form>
+            <div id="login-error"></div>
+        </div>
+    </div>
+
+    <div id="admin-paneel" class="container">
+        <button class="uitlog-knop" onclick="uitloggen()">Uitloggen</button>
         <h1>Schilderijen Toevoegen</h1>
 
         <form id="upload-form">
@@ -106,11 +123,11 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-storage-compat.js"></script>
 
     <script>
-        // Initieer Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBvA_Jck1PO6CDbI1cngZBpxO2ETAb9_GY",
             authDomain: "paintings-be46b.firebaseapp.com",
@@ -122,10 +139,46 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const storage = firebase.storage();
+        const auth = firebase.auth();
 
         const form = document.getElementById('upload-form');
+        const loginForm = document.getElementById('login-form');
         const statusMelding = document.getElementById('status-melding');
+        const loginError = document.getElementById('login-error');
         let huidigBewerkId = null;
+
+        // AUTH OBSERVABLE: Regelt wat er getoond wordt op basis van wel/niet ingelogd
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('admin-paneel').style.display = 'block';
+                document.getElementById('login-scherm').style.display = 'none';
+                laadSchilderijenLijst();
+            } else {
+                document.getElementById('admin-paneel').style.display = 'none';
+                document.getElementById('login-scherm').style.display = 'flex';
+            }
+        });
+
+        // Login logica
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const wachtwoord = document.getElementById('login-wachtwoord').value;
+            loginError.innerText = "Bezig met inloggen... ⏳";
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, wachtwoord);
+                loginError.innerText = "";
+            } catch (error) {
+                console.error(error);
+                loginError.innerText = "❌ Inloggen mislukt. Controleer e-mail en wachtwoord.";
+            }
+        });
+
+        // Uitlog logica
+        window.uitloggen = function() {
+            auth.signOut();
+        };
 
         // Upload script met automatische nummering
         form.addEventListener('submit', async (e) => {
@@ -192,13 +245,12 @@
             }
         });
 
-        // Laad script mét ingebouwde foutzoeker
+        // Laad script
         async function laadSchilderijenLijst() {
             const lijst = document.getElementById('schilderijen-lijst');
-            
             try {
                 const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
-                lijst.innerHTML = ''; // Maak de lijst leeg als we zeker weten dat het is gelukt
+                lijst.innerHTML = '';
                 
                 if (querySnapshot.empty) {
                     lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
@@ -212,7 +264,7 @@
                     
                     const f = data.formaat || "Onbekend";
                     const t = data.type || "Onbekend";
-                    const l = data.lijst ? String(data.lijst) : "Onbekend"; // Zorgt dat dit 100% zeker een tekstveld is
+                    const l = data.lijst ? String(data.lijst) : "Onbekend";
                     
                     let infoHtml = `<strong>${data.titel}</strong><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
                     
@@ -226,7 +278,6 @@
                         }
                     }
 
-                    // Handigheidje: veilige tekstvervanging voor knoppen
                     const veiligeLijst = l.replace(/'/g, "\\'");
 
                     li.innerHTML = `
@@ -243,9 +294,7 @@
                 });
 
             } catch (error) {
-                // Als Firebase vastloopt, toon het dan op het scherm!
                 lijst.innerHTML = `<li style="color: red; font-weight: bold;">Fout bij laden database: ${error.message}</li>`;
-                console.error("Foutmelding:", error);
             }
         }
 
@@ -313,9 +362,6 @@
                 laadSchilderijenLijst(); 
             }
         };
-
-        // Start het laden
-        laadSchilderijenLijst();
     </script>
 </body>
 </html>
