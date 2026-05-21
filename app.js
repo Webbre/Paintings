@@ -18,6 +18,9 @@ const lightboxFormaat = document.getElementById('lightbox-formaat');
 const sluitKnop = document.querySelector('.sluit-knop');
 const filterKnoppen = document.querySelectorAll('.filter-knop');
 
+// NIEUW: Pak de formaat dropdown
+const formaatDropdown = document.getElementById('filter-formaat');
+
 const formulierTitel = document.getElementById('formulier-titel');
 const invulVelden = document.getElementById('invul-velden');
 const koperNaamInput = document.getElementById('koper-naam');
@@ -28,6 +31,10 @@ const bevestigKnop = document.getElementById('bevestig-reservering');
 let huidigSchilderijId = null; 
 let huidigeStatus = null;
 
+// NIEUW: Sla op wat de actieve filters zijn
+let huidigeStatusFilter = 'alles';
+let huidigeFormaatFilter = 'Alles';
+
 async function laadSchilderijen() {
     galerijContainer.innerHTML = ''; 
     const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
@@ -35,9 +42,15 @@ async function laadSchilderijen() {
     querySnapshot.forEach((doc) => {
         const data = doc.data();
         const kaart = document.createElement('div');
-        kaart.className = `schilderij-kaart ${data.status}`;
         
-        const formaatTekst = data.formaat || "Onbekend";
+        // Zorg dat we het formaat veilig als tekst uitlezen (met een hoofdletter als basis)
+        const f = data.formaat ? data.formaat.trim() : "Onbekend";
+        
+        // NIEUW: Zet ook het formaat als een verborgen 'dataset' op de kaart, 
+        // zodat de filter er makkelijk naar kan zoeken.
+        kaart.className = `schilderij-kaart ${data.status}`;
+        kaart.dataset.formaat = f; 
+        
         const typeTekst = data.type || "Onbekend";
         const lijstTekst = data.lijst || "Onbekend";
 
@@ -45,7 +58,7 @@ async function laadSchilderijen() {
             <img src="${data.afbeelding_url}" alt="${data.titel}">
             <h3>${data.titel}</h3>
             <p class="formaat-label">
-                Formaat: ${formaatTekst}<br>
+                Formaat: ${f}<br>
                 Type: ${typeTekst}<br>
                 Lijst: ${lijstTekst}
             </p> 
@@ -63,7 +76,7 @@ async function laadSchilderijen() {
             
             lightboxFoto.src = data.afbeelding_url;
             lightboxTitel.innerText = data.titel;
-            lightboxFormaat.innerHTML = `Formaat: ${formaatTekst} <br> Type: ${typeTekst} <br> Lijst: ${lijstTekst}`; 
+            lightboxFormaat.innerHTML = `Formaat: ${f} <br> Type: ${typeTekst} <br> Lijst: ${lijstTekst}`; 
             
             koperNaamInput.value = '';
             koperEmailInput.value = '';
@@ -91,6 +104,9 @@ async function laadSchilderijen() {
 
         galerijContainer.appendChild(kaart);
     });
+    
+    // Zodra alles geladen is, laat direct de actieve filters hun werk doen
+    pasFiltersToe();
 }
 
 bevestigKnop.addEventListener('click', async () => {
@@ -120,39 +136,3 @@ bevestigKnop.addEventListener('click', async () => {
             await docRef.update({
                 reservelijst: firebase.firestore.FieldValue.arrayUnion({
                     naam: naam,
-                    email: email,
-                    bericht: bericht
-                })
-            });
-            alert("Je bent succesvol op de reservelijst geplaatst!");
-        }
-        
-        lightbox.style.display = 'none';
-        laadSchilderijen(); 
-
-    } catch (error) {
-        console.error("Fout: ", error);
-        alert("Er ging iets mis. Probeer het later nog eens.");
-    }
-});
-
-sluitKnop.addEventListener('click', () => { lightbox.style.display = 'none'; });
-window.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.style.display = 'none'; });
-
-filterKnoppen.forEach(knop => {
-    knop.addEventListener('click', () => {
-        filterKnoppen.forEach(k => k.classList.remove('actief'));
-        knop.classList.add('actief');
-
-        const filterWaarde = knop.innerText.toLowerCase(); 
-        const alleKaarten = document.querySelectorAll('.schilderij-kaart');
-
-        alleKaarten.forEach(kaart => {
-            if (filterWaarde === 'alles') kaart.style.display = '';
-            else if (filterWaarde === 'beschikbaar') kaart.style.display = kaart.classList.contains('beschikbaar') ? '' : 'none';
-            else if (filterWaarde === 'gereserveerd') kaart.style.display = kaart.classList.contains('gereserveerd') ? '' : 'none';
-        });
-    });
-});
-
-laadSchilderijen();
