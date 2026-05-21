@@ -29,22 +29,35 @@ const bevestigKnop = document.getElementById('bevestig-reservering');
 let huidigSchilderijId = null; 
 let huidigeStatus = null;
 
-// Sla op wat de actieve filters zijn
 let huidigeStatusFilter = 'alles';
 let huidigeFormaatFilter = 'Alles';
+
+// De debug container (Röntgen-bril)
+const debugBalk = document.createElement('div');
+debugBalk.style.backgroundColor = '#007bff';
+debugBalk.style.color = 'white';
+debugBalk.style.padding = '10px';
+debugBalk.style.marginBottom = '20px';
+debugBalk.style.borderRadius = '5px';
+debugBalk.style.textAlign = 'center';
+debugBalk.style.fontWeight = 'bold';
+debugBalk.innerHTML = 'Systeem wordt gestart...';
+galerijContainer.parentElement.insertBefore(debugBalk, galerijContainer); // Zet hem boven de galerij
 
 async function laadSchilderijen() {
     galerijContainer.innerHTML = '<p style="text-align: center; width: 100%;">Schilderijen laden... ⏳</p>'; 
     
     try {
         const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
-        galerijContainer.innerHTML = ''; // Maak leeg voor de nieuwe kaarten
+        galerijContainer.innerHTML = ''; 
 
+        // RÖNTGEN: Hoeveel zitten er in de database?
+        let totaalGevonden = querySnapshot.size;
+        
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             const kaart = document.createElement('div');
             
-            // HUFTERPROOF: Veilig het formaat uitlezen (voorkomt crashes!)
             let f = "Onbekend";
             if (data.formaat) {
                 f = String(data.formaat).trim();
@@ -72,7 +85,6 @@ async function laadSchilderijen() {
             }
             kaart.innerHTML = inhoud;
 
-            // Nu is ELK schilderij klikbaar, ook de gereserveerde!
             kaart.addEventListener('click', () => {
                 huidigSchilderijId = doc.id; 
                 huidigeStatus = veiligeStatus;
@@ -107,13 +119,14 @@ async function laadSchilderijen() {
             galerijContainer.appendChild(kaart);
         });
         
-        // Zodra alles veilig geladen is, laat direct de actieve filters hun werk doen
-        pasFiltersToe();
+        // Stuur de gevonden data naar de filter
+        pasFiltersToe(totaalGevonden);
 
     } catch (error) {
-        // Als het nu misgaat, zien we het in rode letters op het scherm!
         console.error(error);
         galerijContainer.innerHTML = `<p style="color: red; text-align: center; width: 100%; font-weight: bold;">Fout bij inladen: ${error.message}</p>`;
+        debugBalk.style.backgroundColor = 'red';
+        debugBalk.innerHTML = `🚨 Fout: ${error.message}`;
     }
 }
 
@@ -138,4 +151,71 @@ bevestigKnop.addEventListener('click', async () => {
                 koper_bericht: bericht,
                 reservelijst: [] 
             });
-            alert
+            alert("Bedankt voor je interesse! Het schilderij is voor je gereserveerd. Er wordt z.s.m. contact opgenomen.");
+        } else if (huidigeStatus === 'gereserveerd') {
+            await docRef.update({
+                reservelijst: firebase.firestore.FieldValue.arrayUnion({
+                    naam: naam,
+                    email: email,
+                    bericht: bericht
+                })
+            });
+            alert("Je bent succesvol op de reservelijst geplaatst!");
+        }
+        
+        lightbox.style.display = 'none';
+        laadSchilderijen(); 
+
+    } catch (error) {
+        console.error("Fout: ", error);
+        alert("Er ging iets mis. Probeer het later nog eens.");
+    }
+});
+
+sluitKnop.addEventListener('click', () => { lightbox.style.display = 'none'; });
+window.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.style.display = 'none'; });
+
+filterKnoppen.forEach(knop => {
+    knop.addEventListener('click', () => {
+        filterKnoppen.forEach(k => k.classList.remove('actief'));
+        knop.classList.add('actief');
+
+        huidigeStatusFilter = knop.innerText.toLowerCase(); 
+        pasFiltersToe();
+    });
+});
+
+if (formaatDropdown) {
+    formaatDropdown.addEventListener('change', (e) => {
+        huidigeFormaatFilter = e.target.value; 
+        pasFiltersToe();
+    });
+}
+
+function pasFiltersToe(totaalGevonden = "Onbekend") {
+    const alleKaarten = document.querySelectorAll('.schilderij-kaart');
+    let zichtbaarAantal = 0;
+
+    alleKaarten.forEach(kaart => {
+        let magTonenStatus = false;
+        if (huidigeStatusFilter === 'alles') magTonenStatus = true;
+        else if (huidigeStatusFilter === 'beschikbaar' && kaart.classList.contains('beschikbaar')) magTonenStatus = true;
+        else if (huidigeStatusFilter === 'gereserveerd' && kaart.classList.contains('gereserveerd')) magTonenStatus = true;
+
+        let magTonenFormaat = false;
+        if (huidigeFormaatFilter === 'Alles') magTonenFormaat = true;
+        else if (kaart.dataset.formaat === huidigeFormaatFilter) magTonenFormaat = true;
+
+        if (magTonenStatus && magTonenFormaat) {
+            kaart.style.display = '';
+            zichtbaarAantal++;
+        } else {
+            kaart.style.display = 'none';
+        }
+    });
+    
+    // RÖNTGEN-UPDATE: Update de blauwe balk met de uitkomst!
+    debugBalk.innerHTML = `🔍 Database vond: ${totaalGevonden} schilderijen | Filter staat op: '${huidigeStatusFilter}' & '${huidigeFormaatFilter}' | Zichtbaar op scherm: ${zichtbaarAantal}`;
+}
+
+laadSchilderijen();
