@@ -58,4 +58,25 @@
                     <h3 id="lightbox-titel">Titel</h3>
                     <p id="lightbox-formaat" class="formaat-label"></p>
                     
-                    <div id
+                    <div id="reservering-gedeelte">
+                        <p id="formulier-titel">Reserveer dit schilderij:</p>
+                        <p class="kleine-disclaimer"><em>(De afgebeelde lijst dient enkel ter illustratie)</em></p>
+                        
+                        <div id="invul-velden">
+                            <input type="text" id="koper-naam" placeholder="Jouw naam" required>
+                            <input type="email" id="koper-email" placeholder="Jouw e-mailadres" required>
+                            <textarea id="koper-bericht" placeholder="Optioneel: Laat een berichtje achter..." rows="3"></textarea>
+                            <button id="bevestig-reservering" class="reserveren-knop">Bevestig reservering</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+    <script src="app.js?v=5"></script>
+</body>
+</html>
