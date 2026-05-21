@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Paintings" />
     <link rel="manifest" href="site.webmanifest" />
 
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -27,6 +27,16 @@
             <button class="filter-knop actief">Alles</button>
             <button class="filter-knop">Beschikbaar</button>
             <button class="filter-knop">Gereserveerd</button>
+        </div>
+
+        <div class="formaat-filter-container" style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 15px; margin-bottom: 5px;">
+            <label for="filter-formaat" style="color: #666; font-weight: bold; font-size: 0.9em;">Kies een formaat:</label>
+            <select id="filter-formaat" style="padding: 8px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; cursor: pointer; outline: none;">
+                <option value="Alles">Alle formaten</option>
+                <option value="Groot">Groot</option>
+                <option value="Middelgroot">Middelgroot</option>
+                <option value="Klein">Klein</option>
+            </select>
         </div>
     </header>
 
@@ -48,25 +58,4 @@
                     <h3 id="lightbox-titel">Titel</h3>
                     <p id="lightbox-formaat" class="formaat-label"></p>
                     
-                    <div id="reservering-gedeelte">
-                        <p id="formulier-titel">Reserveer dit schilderij:</p>
-                        <p class="kleine-disclaimer"><em>(De afgebeelde lijst dient enkel ter illustratie)</em></p>
-                        
-                        <div id="invul-velden">
-                            <input type="text" id="koper-naam" placeholder="Jouw naam" required>
-                            <input type="email" id="koper-email" placeholder="Jouw e-mailadres" required>
-                            <textarea id="koper-bericht" placeholder="Optioneel: Laat een berichtje achter..." rows="3"></textarea>
-                            <button id="bevestig-reservering" class="reserveren-knop">Bevestig reservering</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
+                    <div id
