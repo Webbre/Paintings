@@ -65,41 +65,52 @@ async function laadSchilderijen() {
                 </p> 
             `;
 
+            // Labels bepalen aan de hand van status
             if (veiligeStatus === 'gereserveerd') {
                 inhoud += `<div class="status-label">Gereserveerd</div>`;
+            } else if (veiligeStatus === 'niet-beschikbaar') {
+                inhoud += `<div class="status-label" style="background-color: #555; color: #fff;">Niet meer beschikbaar</div>`;
             }
+            
             kaart.innerHTML = inhoud;
 
-            kaart.addEventListener('click', () => {
-                huidigSchilderijId = doc.id; 
-                huidigeStatus = veiligeStatus;
-                
-                lightboxFoto.src = data.afbeelding_url;
-                lightboxTitel.innerText = data.titel;
-                lightboxFormaat.innerHTML = `Formaat: ${f} <br> Type: ${typeTekst} <br> Lijst: ${lijstTekst}`; 
-                
-                koperNaamInput.value = '';
-                koperEmailInput.value = '';
-                koperBerichtInput.value = ''; 
-                
-                if (veiligeStatus === 'beschikbaar') {
-                    formulierTitel.innerText = "Interesse in dit schilderij?";
-                    bevestigKnop.innerText = "Bevestig aanvraag";
-                    invulVelden.style.display = 'flex';
-                } else if (veiligeStatus === 'gereserveerd') {
-                    const reservelijst = data.reservelijst || [];
-                    if (reservelijst.length < 2) {
-                        formulierTitel.innerText = "Schilderij is al gereserveerd. Wil je op de reservelijst?";
-                        bevestigKnop.innerText = "Plaats op reservelijst";
+            // Klik-logica: 'Niet beschikbaar' mag niet aangeklikt worden
+            if (veiligeStatus !== 'niet-beschikbaar') {
+                kaart.addEventListener('click', () => {
+                    huidigSchilderijId = doc.id; 
+                    huidigeStatus = veiligeStatus;
+                    
+                    lightboxFoto.src = data.afbeelding_url;
+                    lightboxTitel.innerText = data.titel;
+                    lightboxFormaat.innerHTML = `Formaat: ${f} <br> Type: ${typeTekst} <br> Lijst: ${lijstTekst}`; 
+                    
+                    koperNaamInput.value = '';
+                    koperEmailInput.value = '';
+                    koperBerichtInput.value = ''; 
+                    
+                    if (veiligeStatus === 'beschikbaar') {
+                        formulierTitel.innerText = "Interesse in dit schilderij?";
+                        bevestigKnop.innerText = "Bevestig aanvraag";
                         invulVelden.style.display = 'flex';
-                    } else {
-                        formulierTitel.innerText = "Dit schilderij is gereserveerd en de reservelijst zit momenteel vol.";
-                        invulVelden.style.display = 'none';
+                    } else if (veiligeStatus === 'gereserveerd') {
+                        const reservelijst = data.reservelijst || [];
+                        if (reservelijst.length < 2) {
+                            formulierTitel.innerText = "Schilderij is al gereserveerd. Wil je op de reservelijst?";
+                            bevestigKnop.innerText = "Plaats op reservelijst";
+                            invulVelden.style.display = 'flex';
+                        } else {
+                            formulierTitel.innerText = "Dit schilderij is gereserveerd en de reservelijst zit momenteel vol.";
+                            invulVelden.style.display = 'none';
+                        }
                     }
-                }
-                
-                lightbox.style.display = 'block';
-            });
+                    
+                    lightbox.style.display = 'block';
+                });
+            } else {
+                // Visuele feedback dat deze kaart niet meer interactief is
+                kaart.style.cursor = 'default';
+                kaart.style.opacity = '0.75';
+            }
 
             galerijContainer.appendChild(kaart);
         });
@@ -179,9 +190,16 @@ function pasFiltersToe() {
 
     alleKaarten.forEach(kaart => {
         let magTonenStatus = false;
-        if (huidigeStatusFilter === 'alles') magTonenStatus = true;
-        else if (huidigeStatusFilter === 'beschikbaar' && kaart.classList.contains('beschikbaar')) magTonenStatus = true;
-        else if (huidigeStatusFilter === 'gereserveerd' && kaart.classList.contains('gereserveerd')) magTonenStatus = true;
+        
+        if (huidigeStatusFilter === 'alles') {
+            magTonenStatus = true;
+        } else if (huidigeStatusFilter === 'beschikbaar' && kaart.classList.contains('beschikbaar')) {
+            magTonenStatus = true;
+        } else if (huidigeStatusFilter === 'gereserveerd' && kaart.classList.contains('gereserveerd')) {
+            magTonenStatus = true;
+        } else if (huidigeStatusFilter === 'niet meer beschikbaar' && kaart.classList.contains('niet-beschikbaar')) {
+            magTonenStatus = true;
+        }
 
         let magTonenFormaat = false;
         if (huidigeFormaatFilter === 'Alles') magTonenFormaat = true;
