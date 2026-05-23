@@ -22,6 +22,7 @@
         .rij-boven { display: flex; justify-content: space-between; align-items: flex-start; }
         
         li.status-gereserveerd { background-color: #fff3cd; border-color: #ffeeba; }
+        li.status-niet-beschikbaar { background-color: #e2e3e5; border-color: #d6d8db; }
         .koper-info { display: block; font-size: 0.9em; color: #856404; margin-top: 5px; }
         .reserve-info { display: block; font-size: 0.85em; color: #666; margin-top: 5px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 3px; }
         
@@ -109,7 +110,13 @@
 
     <div id="edit-modal">
         <div class="modal-content">
-            <h3>Specs bewerken</h3>
+            <h3>Gegevens bewerken</h3>
+            <label>Status:</label>
+            <select id="edit-status">
+                <option value="beschikbaar">Beschikbaar</option>
+                <option value="gereserveerd">Gereserveerd</option>
+                <option value="niet-beschikbaar">Niet meer beschikbaar</option>
+            </select>
             <label>Formaat:</label>
             <select id="edit-formaat">
                 <option value="Groot">Groot</option>
@@ -162,12 +169,10 @@
             // Regelt de status van het inloggen
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // Als ingelogd: Verberg inlogscherm, toon admin paneel
                     document.getElementById('login-scherm').style.display = 'none';
                     document.getElementById('admin-paneel').style.display = 'block';
                     laadSchilderijenLijst();
                 } else {
-                    // Als niet ingelogd: Toon inlogscherm, verberg admin paneel
                     document.getElementById('login-scherm').style.display = 'flex';
                     document.getElementById('admin-paneel').style.display = 'none';
                 }
@@ -274,15 +279,29 @@
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
                         const li = document.createElement('li');
-                        if (data.status === 'gereserveerd') li.className = 'status-gereserveerd';
+                        
+                        const s = data.status || "beschikbaar";
+                        if (s === 'gereserveerd') li.className = 'status-gereserveerd';
+                        if (s === 'niet-beschikbaar') li.className = 'status-niet-beschikbaar';
+                        
+                        let statusWeergave = s.charAt(0).toUpperCase() + s.slice(1);
+                        let statusKleur = "#17a2b8";
+                        if (s === 'niet-beschikbaar') {
+                            statusWeergave = 'Niet meer beschikbaar';
+                            statusKleur = '#6c757d';
+                        } else if (s === 'gereserveerd') {
+                            statusKleur = '#ffc107';
+                        } else if (s === 'beschikbaar') {
+                            statusKleur = '#28a745';
+                        }
                         
                         const f = data.formaat || "Onbekend";
                         const t = data.type || "Onbekend";
                         const l = data.lijst ? String(data.lijst) : "Onbekend";
                         
-                        let infoHtml = `<strong>${data.titel}</strong><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
+                        let infoHtml = `<strong>${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
                         
-                        if (data.status === 'gereserveerd') {
+                        if (s === 'gereserveerd') {
                             infoHtml += `<span class="koper-info">👤 <strong>Geclaimd door:</strong> ${data.koper_naam} (${data.koper_email}) - "${data.koper_bericht || ''}"</span>`;
                             
                             if (data.reservelijst && data.reservelijst.length > 0) {
@@ -298,8 +317,8 @@
                             <div class="rij-boven">
                                 <div>${infoHtml}</div>
                                 <div class="actie-knoppen">
-                                    <button class="bewerk-knop" onclick="openEditModal('${doc.id}', '${f}', '${t}', '${veiligeLijst}')">Bewerk specs</button>
-                                    ${data.status === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${doc.id}')">Annuleer / Schuif door</button>` : ''}
+                                    <button class="bewerk-knop" onclick="openEditModal('${doc.id}', '${f}', '${t}', '${veiligeLijst}', '${s}')">Bewerken</button>
+                                    ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${doc.id}')">Annuleer / Schuif door</button>` : ''}
                                     <button class="verwijder-knop" onclick="verwijderSchilderij('${doc.id}')">X</button>
                                 </div>
                             </div>
@@ -313,11 +332,12 @@
             }
 
             // Bewerk Logica
-            window.openEditModal = function(id, f, t, l) {
+            window.openEditModal = function(id, f, t, l, s) {
                 huidigBewerkId = id;
                 document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
                 document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
+                document.getElementById('edit-status').value = s;
                 document.getElementById('edit-modal').style.display = 'flex';
             };
 
@@ -331,7 +351,8 @@
                 await db.collection("schilderijen").doc(huidigBewerkId).update({
                     formaat: document.getElementById('edit-formaat').value,
                     type: document.getElementById('edit-type').value,
-                    lijst: document.getElementById('edit-lijst').value
+                    lijst: document.getElementById('edit-lijst').value,
+                    status: document.getElementById('edit-status').value
                 });
                 sluitEditModal();
                 laadSchilderijenLijst();
