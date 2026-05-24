@@ -39,18 +39,15 @@ async function laadSchilderijen() {
         const querySnapshot = await db.collection("schilderijen").get();
         galerijContainer.innerHTML = ''; 
         
-        // 1. Stop alles in een lijst
         let schilderijenLijst = [];
         querySnapshot.forEach((doc) => {
             schilderijenLijst.push({ id: doc.id, ...doc.data() });
         });
 
-        // 2. De Wiskundige Sorteertruc: Zet 100 écht na 99 in plaats van na 10
         schilderijenLijst.sort((a, b) => {
             return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
         });
         
-        // 3. Teken de perfect gesorteerde lijst op het scherm
         schilderijenLijst.forEach((data) => {
             const kaart = document.createElement('div');
             
@@ -66,8 +63,10 @@ async function laadSchilderijen() {
             const typeTekst = data.type || "Onbekend";
             const lijstTekst = data.lijst || "Onbekend";
 
+            // NIEUW: loading="lazy" is hier toegevoegd aan de <img> tag!
+            // Ook is er een lichte animatie toegevoegd zodat beelden zachtjes in beeld komen
             let inhoud = `
-                <img src="${data.afbeelding_url}" alt="${data.titel}">
+                <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
                 <h3>${data.titel}</h3>
                 <p class="formaat-label">
                     Formaat: ${f}<br>
