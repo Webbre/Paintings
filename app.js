@@ -36,11 +36,22 @@ async function laadSchilderijen() {
     galerijContainer.innerHTML = '<p style="text-align: center; width: 100%;">Schilderijen laden... ⏳</p>'; 
     
     try {
-        const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
+        const querySnapshot = await db.collection("schilderijen").get();
         galerijContainer.innerHTML = ''; 
         
+        // 1. Stop alles in een lijst
+        let schilderijenLijst = [];
         querySnapshot.forEach((doc) => {
-            const data = doc.data();
+            schilderijenLijst.push({ id: doc.id, ...doc.data() });
+        });
+
+        // 2. De Wiskundige Sorteertruc: Zet 100 écht na 99 in plaats van na 10
+        schilderijenLijst.sort((a, b) => {
+            return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
+        });
+        
+        // 3. Teken de perfect gesorteerde lijst op het scherm
+        schilderijenLijst.forEach((data) => {
             const kaart = document.createElement('div');
             
             let f = "Onbekend";
@@ -65,7 +76,6 @@ async function laadSchilderijen() {
                 </p> 
             `;
 
-            // Labels bepalen aan de hand van status
             if (veiligeStatus === 'gereserveerd') {
                 inhoud += `<div class="status-label">Gereserveerd</div>`;
             } else if (veiligeStatus === 'niet-beschikbaar') {
@@ -74,10 +84,9 @@ async function laadSchilderijen() {
             
             kaart.innerHTML = inhoud;
 
-            // Klik-logica: 'Niet beschikbaar' mag niet aangeklikt worden
             if (veiligeStatus !== 'niet-beschikbaar') {
                 kaart.addEventListener('click', () => {
-                    huidigSchilderijId = doc.id; 
+                    huidigSchilderijId = data.id; 
                     huidigeStatus = veiligeStatus;
                     
                     lightboxFoto.src = data.afbeelding_url;
@@ -107,7 +116,6 @@ async function laadSchilderijen() {
                     lightbox.style.display = 'block';
                 });
             } else {
-                // Visuele feedback dat deze kaart niet meer interactief is
                 kaart.style.cursor = 'default';
                 kaart.style.opacity = '0.75';
             }
