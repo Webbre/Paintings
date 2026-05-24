@@ -63,8 +63,6 @@ async function laadSchilderijen() {
             const typeTekst = data.type || "Onbekend";
             const lijstTekst = data.lijst || "Onbekend";
 
-            // NIEUW: loading="lazy" is hier toegevoegd aan de <img> tag!
-            // Ook is er een lichte animatie toegevoegd zodat beelden zachtjes in beeld komen
             let inhoud = `
                 <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
                 <h3>${data.titel}</h3>
@@ -98,7 +96,7 @@ async function laadSchilderijen() {
                     
                     if (veiligeStatus === 'beschikbaar') {
                         formulierTitel.innerText = "Interesse in dit schilderij?";
-                        bevestigKnop.innerText = "Bevestig aanvraag";
+                        bevestigKnop.innerText = "Bevestig reservering";
                         invulVelden.style.display = 'flex';
                     } else if (veiligeStatus === 'gereserveerd') {
                         const reservelijst = data.reservelijst || [];
@@ -140,7 +138,46 @@ bevestigKnop.addEventListener('click', async () => {
         return;
     }
 
+    // Zet de knop tijdelijk uit om dubbelklikken te voorkomen
+    bevestigKnop.disabled = true;
+    const origineleTekst = bevestigKnop.innerText;
+    bevestigKnop.innerText = "Bezig met controleren... ⏳";
+
     try {
+        // --- NIEUW: CHECK OP MAXIMAAL 2 RESERVERINGEN ---
+        // Haal alle gereserveerde schilderijen op om te tellen
+        const gereserveerdeDocs = await db.collection("schilderijen").where("status", "==", "gereserveerd").get();
+        let emailTelling = 0;
+
+        gereserveerdeDocs.forEach(doc => {
+            const d = doc.data();
+            
+            // Controleer of de persoon de hoofdkoper is
+            if (d.koper_email && d.koper_email.toLowerCase() === email.toLowerCase()) {
+                emailTelling++;
+            }
+            
+            // Controleer of de persoon op een reservelijst staat
+            if (d.reservelijst && Array.isArray(d.reservelijst)) {
+                d.reservelijst.forEach(res => {
+                    if (res.email && res.email.toLowerCase() === email.toLowerCase()) {
+                        emailTelling++;
+                    }
+                });
+            }
+        });
+
+        // Als ze al 2 of meer (wachtlijst)reserveringen hebben, breek het proces af!
+        if (emailTelling >= 2) {
+            alert("Let op: Je hebt het maximum van 2 reserveringen voor dit e-mailadres bereikt. Om iedereen een eerlijke kans te geven, is het helaas niet mogelijk om er meer te reserveren.");
+            bevestigKnop.disabled = false;
+            bevestigKnop.innerText = origineleTekst;
+            return; // Stop hier
+        }
+        // ------------------------------------------------
+
+        // Als ze hier aankomen, is de check geslaagd en gaan we opslaan
+        bevestigKnop.innerText = "Bezig met opslaan... ⏳";
         const docRef = db.collection("schilderijen").doc(huidigSchilderijId);
         
         if (huidigeStatus === 'beschikbaar') {
@@ -169,6 +206,10 @@ bevestigKnop.addEventListener('click', async () => {
     } catch (error) {
         console.error("Fout: ", error);
         alert("Er ging iets mis. Probeer het later nog eens.");
+    } finally {
+        // Herstel de knop altijd na een succesvolle (of mislukte) poging
+        bevestigKnop.disabled = false;
+        bevestigKnop.innerText = origineleTekst;
     }
 });
 
