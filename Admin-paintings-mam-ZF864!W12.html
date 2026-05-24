@@ -37,19 +37,11 @@
         .uitlog-knop { background-color: #6c757d; float: right; padding: 8px 15px; font-size: 12px; margin-top: -5px; }
         .uitlog-knop:hover { background-color: #5a6268; }
         
-        /* Inlogscherm is nu standaard ZICHTBAAR (display: flex in plaats van none) */
         #login-scherm { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; align-items: center; justify-content: center; z-index: 2000; }
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
         
-        /* Styling voor het logo op het inlogscherm */
-        .login-logo {
-            display: block;
-            margin: 0 auto 25px auto;
-            max-width: 180px;
-            height: auto;
-        }
+        .login-logo { display: block; margin: 0 auto 25px auto; max-width: 180px; height: auto; }
         
-        /* Modal voor het bewerken */
         #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
         
@@ -61,7 +53,6 @@
     <div id="login-scherm">
         <div class="login-box">
             <img src="login-logo.png" alt="Dineke Schilderijen Logo" class="login-logo" onerror="this.style.display='none'">
-            
             <h2 style="margin-top:0; text-align: center;">Beheer login</h2>
             <form id="login-form">
                 <label>E-mailadres:</label>
@@ -88,6 +79,7 @@
                 <select id="formaat" required>
                     <option value="Groot">Groot</option>
                     <option value="Middelgroot">Middelgroot</option>
+                    <option value="Middel">Middel</option>
                     <option value="Klein">Klein</option>
                 </select>
                 <label>Type:</label>
@@ -121,6 +113,7 @@
             <select id="edit-formaat">
                 <option value="Groot">Groot</option>
                 <option value="Middelgroot">Middelgroot</option>
+                <option value="Middel">Middel</option>
                 <option value="Klein">Klein</option>
             </select>
             <label>Type:</label>
@@ -166,7 +159,6 @@
             const loginError = document.getElementById('login-error');
             let huidigBewerkId = null;
 
-            // Regelt de status van het inloggen
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     document.getElementById('login-scherm').style.display = 'none';
@@ -178,7 +170,6 @@
                 }
             });
 
-            // Login logica
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('login-email').value;
@@ -194,12 +185,10 @@
                 }
             });
 
-            // Uitlog logica
             window.uitloggen = function() {
                 auth.signOut();
             };
 
-            // Upload script
             form.addEventListener('submit', async (e) => {
                 e.preventDefault(); 
                 const bestanden = document.getElementById('foto').files;
@@ -264,20 +253,28 @@
                 }
             });
 
-            // Laad script
             async function laadSchilderijenLijst() {
                 const lijst = document.getElementById('schilderijen-lijst');
                 try {
-                    const querySnapshot = await db.collection("schilderijen").orderBy("titel", "asc").get();
+                    const querySnapshot = await db.collection("schilderijen").get();
                     lijst.innerHTML = '';
                     
                     if (querySnapshot.empty) {
                         lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
                         return;
                     }
-                    
+
+                    // Wiskundige sortering voor de admin-lijst
+                    let schilderijenArray = [];
                     querySnapshot.forEach((doc) => {
-                        const data = doc.data();
+                        schilderijenArray.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    schilderijenArray.sort((a, b) => {
+                        return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
+                    });
+                    
+                    schilderijenArray.forEach((data) => {
                         const li = document.createElement('li');
                         
                         const s = data.status || "beschikbaar";
@@ -317,9 +314,9 @@
                             <div class="rij-boven">
                                 <div>${infoHtml}</div>
                                 <div class="actie-knoppen">
-                                    <button class="bewerk-knop" onclick="openEditModal('${doc.id}', '${f}', '${t}', '${veiligeLijst}', '${s}')">Bewerken</button>
-                                    ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${doc.id}')">Annuleer / Schuif door</button>` : ''}
-                                    <button class="verwijder-knop" onclick="verwijderSchilderij('${doc.id}')">X</button>
+                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}')">Bewerken</button>
+                                    ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer / Schuif door</button>` : ''}
+                                    <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">X</button>
                                 </div>
                             </div>
                         `;
@@ -331,7 +328,6 @@
                 }
             }
 
-            // Bewerk Logica
             window.openEditModal = function(id, f, t, l, s) {
                 huidigBewerkId = id;
                 document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
@@ -358,7 +354,6 @@
                 laadSchilderijenLijst();
             };
 
-            // Doorschuif of annuleer logica
             window.maakBeschikbaar = async function(id) {
                 const docRef = db.collection("schilderijen").doc(id);
                 const docSnap = await docRef.get();
