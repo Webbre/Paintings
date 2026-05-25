@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Paintings" />
     <link rel="manifest" href="site.webmanifest" />
 
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
@@ -32,6 +32,7 @@
                 <span style="background: #fff; padding: 6px 12px; border-radius: 4px; border: 1px solid #dee2e6;"><strong>Klein:</strong> 20 x 14</span>
             </div>
         </div>
+
         <div class="filter-knoppen">
             <button class="filter-knop actief">Alles</button>
             <button class="filter-knop">Beschikbaar</button>
@@ -39,15 +40,49 @@
             <button class="filter-knop">Niet meer beschikbaar</button>
         </div>
 
-        <div class="formaat-filter-container" style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-            <label for="filter-formaat" style="color: #666; font-weight: bold; font-size: 0.9em;">Kies een formaat:</label>
-            <select id="filter-formaat" style="padding: 8px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; cursor: pointer; outline: none;">
-                <option value="Alles">Alle formaten</option>
-                <option value="Groot">Groot</option>
-                <option value="Middelgroot">Middelgroot</option>
-                <option value="Middel">Middel</option>
-                <option value="Klein">Klein</option>
-            </select>
+        <div class="filter-dropdowns-container" style="display: flex; justify-content: center; gap: 12px; align-items: center; margin-top: 15px; margin-bottom: 5px; flex-wrap: wrap;">
+            
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="filter-formaat" style="color: #666; font-weight: bold; font-size: 0.85em;">Formaat:</label>
+                <select id="filter-formaat" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; cursor: pointer; outline: none;">
+                    <option value="Alles">Alle formaten</option>
+                    <option value="Groot">Groot</option>
+                    <option value="Middelgroot">Middelgroot</option>
+                    <option value="Middel">Middel</option>
+                    <option value="Klein">Klein</option>
+                </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="filter-type" style="color: #666; font-weight: bold; font-size: 0.85em;">Type:</label>
+                <select id="filter-type" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; cursor: pointer; outline: none;">
+                    <option value="Alles">Alle typen</option>
+                    <option value="Doek">Doek</option>
+                    <option value="Paneel">Paneel</option>
+                    <option value="Papier">Papier</option>
+                </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="filter-sfeer" style="color: #666; font-weight: bold; font-size: 0.85em;">Sfeer:</label>
+                <select id="filter-sfeer" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; cursor: pointer; outline: none;">
+                    <option value="Alles">Alle sferen</option>
+                    <option value="Bloemen">Bloemen</option>
+                    <option value="Mensen">Mensen</option>
+                    <option value="Zeegezichten">Zeegezichten</option>
+                    <option value="Landschappen">Landschappen</option>
+                    <option value="Abstract">Abstract</option>
+                    <option value="Overig">Overig</option>
+                </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="filter-kleurtint" style="color: #666; font-weight: bold; font-size: 0.85em;">Kleurtint:</label>
+                <select id="filter-kleurtint" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; cursor: pointer; outline: none;">
+                    <option value="Alles">Alle kleurtinten</option>
+                    </select>
+            </div>
+
         </div>
     </header>
 
@@ -88,6 +123,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
-    <script src="app.js?v=11"></script>
+    <script src="app.js?v=12"></script>
 </body>
 </html>
