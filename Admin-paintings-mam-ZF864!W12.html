@@ -17,7 +17,6 @@
         #status-melding, #login-error { margin-top: 15px; font-weight: bold; color: #0066cc; }
         #login-error { color: #dc3545; }
         
-        /* NIEUW: De Grid Layout voor de schilderijen */
         ul { list-style-type: none; padding: 0; }
         
         #schilderijen-lijst {
@@ -26,7 +25,6 @@
             gap: 20px;
         }
 
-        /* Dwingt 4 naast elkaar op grote schermen */
         @media (min-width: 1024px) {
             #schilderijen-lijst {
                 grid-template-columns: repeat(4, 1fr);
@@ -169,6 +167,13 @@
     <div id="edit-modal">
         <div class="modal-content">
             <h3>Gegevens bewerken</h3>
+            
+            <div style="background-color: #e9ecef; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <label style="color: #0056b3;">Nieuwe foto uploaden (optioneel):</label>
+                <span style="font-size: 0.8em; color: #666; display: block; margin-bottom: 5px;">Als je hier een bestand kiest, overschrijft dit de huidige foto.</span>
+                <input type="file" id="edit-foto" accept="image/*" style="background: white;">
+            </div>
+
             <label>Status:</label>
             <select id="edit-status">
                 <option value="beschikbaar">Beschikbaar</option>
@@ -216,7 +221,7 @@
             <input type="text" id="edit-lijst" placeholder="Bijv. Eikenhouten lijst">
             
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button onclick="slaBewerkingOp()">Opslaan</button>
+                <button id="opslaan-bewerk-knop" onclick="slaBewerkingOp()">Opslaan</button>
                 <button onclick="sluitEditModal()" style="background-color: #6c757d;">Annuleren</button>
             </div>
         </div>
@@ -405,7 +410,6 @@
                         const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         const veiligeSfeer = sf.replace(/'/g, "\\'");
 
-                        // De nieuwe Card opbouw met afbeelding!
                         li.innerHTML = `
                             <img src="${data.afbeelding_url}" alt="${data.titel}" class="admin-kaart-afbeelding" loading="lazy">
                             <div class="admin-kaart-content">
@@ -432,6 +436,7 @@
                 document.getElementById('edit-sfeer').value = (sf !== 'Onbekend') ? sf : 'Overig';
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
                 document.getElementById('edit-status').value = s;
+                document.getElementById('edit-foto').value = ''; // Reset file input
                 
                 const selectElement = document.getElementById('edit-kleurtint');
                 const options = Array.from(selectElement.options).map(opt => opt.value);
@@ -451,16 +456,45 @@
 
             window.slaBewerkingOp = async function() {
                 if(!huidigBewerkId) return;
-                await db.collection("schilderijen").doc(huidigBewerkId).update({
-                    formaat: document.getElementById('edit-formaat').value,
-                    type: document.getElementById('edit-type').value,
-                    sfeer: document.getElementById('edit-sfeer').value,
-                    kleurtint: document.getElementById('edit-kleurtint').value,
-                    lijst: document.getElementById('edit-lijst').value,
-                    status: document.getElementById('edit-status').value
-                });
-                sluitEditModal();
-                laadSchilderijenLijst();
+                const knop = document.getElementById('opslaan-bewerk-knop');
+                const origineleTekst = knop.innerText;
+                knop.innerText = "Bezig met opslaan... ⏳";
+                knop.disabled = true;
+
+                try {
+                    let updateData = {
+                        formaat: document.getElementById('edit-formaat').value,
+                        type: document.getElementById('edit-type').value,
+                        sfeer: document.getElementById('edit-sfeer').value,
+                        kleurtint: document.getElementById('edit-kleurtint').value,
+                        lijst: document.getElementById('edit-lijst').value,
+                        status: document.getElementById('edit-status').value
+                    };
+
+                    // Check of er een nieuwe foto is geüpload
+                    const fotoInput = document.getElementById('edit-foto');
+                    if (fotoInput.files.length > 0) {
+                        const file = fotoInput.files[0];
+                        const extensie = file.name.split('.').pop();
+                        const nieuweNaam = `Schilderij_Vervanging_${Date.now()}.${extensie}`;
+                        
+                        const opslagReferentie = storage.ref('fotos/' + nieuweNaam);
+                        await opslagReferentie.put(file);
+                        const nieuweFotoLink = await opslagReferentie.getDownloadURL();
+                        
+                        updateData.afbeelding_url = nieuweFotoLink;
+                    }
+
+                    await db.collection("schilderijen").doc(huidigBewerkId).update(updateData);
+                    sluitEditModal();
+                    laadSchilderijenLijst();
+                } catch (e) {
+                    console.error(e);
+                    alert("Fout bij opslaan: " + e.message);
+                } finally {
+                    knop.innerText = origineleTekst;
+                    knop.disabled = false;
+                }
             };
 
             window.maakBeschikbaar = async function(id) {
