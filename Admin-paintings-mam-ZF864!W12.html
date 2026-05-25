@@ -43,7 +43,7 @@
         .login-logo { display: block; margin: 0 auto 25px auto; max-width: 180px; height: auto; }
         
         #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90%; overflow-y: auto; }
         
         #admin-paneel { display: none; }
     </style>
@@ -82,12 +82,27 @@
                     <option value="Middel">Middel</option>
                     <option value="Klein">Klein</option>
                 </select>
+                
                 <label>Type:</label>
                 <select id="type" required>
                     <option value="Doek">Doek</option>
                     <option value="Paneel">Paneel</option>
                     <option value="Papier">Papier</option>
                 </select>
+
+                <label>Sfeer:</label>
+                <select id="sfeer" required>
+                    <option value="Bloemen">Bloemen</option>
+                    <option value="Mensen">Mensen</option>
+                    <option value="Zeegezichten">Zeegezichten</option>
+                    <option value="Landschappen">Landschappen</option>
+                    <option value="Abstract">Abstract</option>
+                    <option value="Overig">Overig</option>
+                </select>
+
+                <label>Kleurtint (Vrij invullen):</label>
+                <input type="text" id="kleurtint" placeholder="Bijv. Blauw, Rood, Warm, Pastel, Herfstkleuren" required>
+
                 <label>Lijst (Vrij invullen):</label>
                 <input type="text" id="lijst" placeholder="Bijv. Eikenhouten lijst, geen lijst, etc." required>
             </div>
@@ -122,6 +137,17 @@
                 <option value="Paneel">Paneel</option>
                 <option value="Papier">Papier</option>
             </select>
+            <label>Sfeer:</label>
+            <select id="edit-sfeer">
+                <option value="Bloemen">Bloemen</option>
+                <option value="Mensen">Mensen</option>
+                <option value="Zeegezichten">Zeegezichten</option>
+                <option value="Landschappen">Landschappen</option>
+                <option value="Abstract">Abstract</option>
+                <option value="Overig">Overig</option>
+            </select>
+            <label>Kleurtint (Vrij invullen):</label>
+            <input type="text" id="edit-kleurtint" placeholder="Bijv. Warm rood">
             <label>Lijst (Vrij invullen):</label>
             <input type="text" id="edit-lijst" placeholder="Bijv. Eikenhouten lijst">
             
@@ -234,6 +260,8 @@
                             status: 'beschikbaar',
                             formaat: document.getElementById('formaat').value,
                             type: document.getElementById('type').value,
+                            sfeer: document.getElementById('sfeer').value,
+                            kleurtint: document.getElementById('kleurtint').value.trim(),
                             lijst: document.getElementById('lijst').value,
                             reservelijst: []
                         });
@@ -264,12 +292,12 @@
                         return;
                     }
 
-                    // Wiskundige sortering voor de admin-lijst
                     let schilderijenArray = [];
                     querySnapshot.forEach((doc) => {
                         schilderijenArray.push({ id: doc.id, ...doc.data() });
                     });
 
+                    // Numerieke sortering
                     schilderijenArray.sort((a, b) => {
                         return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
                     });
@@ -294,9 +322,11 @@
                         
                         const f = data.formaat || "Onbekend";
                         const t = data.type || "Onbekend";
+                        const sf = data.sfeer || "Overig";
+                        const kt = data.kleurtint || "Geen";
                         const l = data.lijst ? String(data.lijst) : "Onbekend";
                         
-                        let infoHtml = `<strong>${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Lijst: ${l}</span>`;
+                        let infoHtml = `<strong>${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Sfeer: ${sf} | Kleurtint: ${kt} | Lijst: ${l}</span>`;
                         
                         if (s === 'gereserveerd') {
                             infoHtml += `<span class="koper-info">👤 <strong>Geclaimd door:</strong> ${data.koper_naam} (${data.koper_email}) - "${data.koper_bericht || ''}"</span>`;
@@ -308,13 +338,16 @@
                             }
                         }
 
-                        const veiligeLijst = l.replace(/'/g, "\\'");
+                        // Veilig escapen van quotes voor JavaScript functies
+                        const veiligeLijst = l.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        const veiligeSfeer = sf.replace(/'/g, "\\'");
 
                         li.innerHTML = `
                             <div class="rij-boven">
                                 <div>${infoHtml}</div>
                                 <div class="actie-knoppen">
-                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}')">Bewerken</button>
+                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}')">Bewerken</button>
                                     ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer / Schuif door</button>` : ''}
                                     <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">X</button>
                                 </div>
@@ -328,10 +361,12 @@
                 }
             }
 
-            window.openEditModal = function(id, f, t, l, s) {
+            window.openEditModal = function(id, f, t, l, s, sf, kt) {
                 huidigBewerkId = id;
                 document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
                 document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
+                document.getElementById('edit-sfeer').value = (sf !== 'Onbekend') ? sf : 'Overig';
+                document.getElementById('edit-kleurtint').value = (kt !== 'Geen') ? kt : '';
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
                 document.getElementById('edit-status').value = s;
                 document.getElementById('edit-modal').style.display = 'flex';
@@ -347,6 +382,8 @@
                 await db.collection("schilderijen").doc(huidigBewerkId).update({
                     formaat: document.getElementById('edit-formaat').value,
                     type: document.getElementById('edit-type').value,
+                    sfeer: document.getElementById('edit-sfeer').value,
+                    kleurtint: document.getElementById('edit-kleurtint').value.trim(),
                     lijst: document.getElementById('edit-lijst').value,
                     status: document.getElementById('edit-status').value
                 });
