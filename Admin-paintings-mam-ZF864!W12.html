@@ -496,4 +496,15 @@
             };
 
             window.verwijderSchilderij = async function(id) {
-                if(confirm("Let op: We
+                if(confirm("Let op: Weet je zeker dat je dit schilderij definitief wilt verwijderen?")) {
+                    await db.collection("schilderijen").doc(id).delete();
+                    laadSchilderijenLijst(); 
+                }
+            };
+            
+        } catch (error) {
+            document.getElementById('login-error').innerText = "Systeemfout bij laden: " + error.message;
+        }
+    </script>
+</body>
+</html>
