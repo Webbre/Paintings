@@ -33,14 +33,12 @@ const bevestigKnop = document.getElementById('bevestig-reservering');
 let huidigSchilderijId = null; 
 let huidigeStatus = null;
 
-// Filter Status State
 let huidigeStatusFilter = 'alles';
 let huidigeFormaatFilter = 'Alles';
 let huidigeTypeFilter = 'Alles';
 let huidigeSfeerFilter = 'Alles';
 let huidigeKleurtintFilter = 'Alles';
 
-// Paginatie Status State
 let alleSchilderijen = [];
 let huidigePagina = 1;
 const itemsPerPagina = 50;
@@ -56,29 +54,11 @@ async function laadSchilderijen() {
             alleSchilderijen.push({ id: doc.id, ...doc.data() });
         });
 
-        // Wiskundige nummering sortering
         alleSchilderijen.sort((a, b) => {
             return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
         });
         
-        // Dynamisch vullen van de Kleurtint Dropdown op basis van unieke waarden uit de database
-        if (kleurtintDropdown) {
-            const huidigeSelectie = kleurtintDropdown.value;
-            kleurtintDropdown.innerHTML = '<option value="Alles">Alle kleurtinten</option>';
-            
-            // Haal alle unieke, niet-lege tinten op
-            const uniekeTinten = [...new Set(alleSchilderijen.map(s => (s.kleurtint || "").trim()).filter(Boolean))].sort();
-            
-            uniekeTinten.forEach(tint => {
-                const opt = document.createElement('option');
-                opt.value = tint;
-                opt.innerText = tint;
-                if (tint === huidigeSelectie) opt.selected = true;
-                kleurtintDropdown.appendChild(opt);
-            });
-        }
-        
-        huidigePagina = 1; // Reset naar pagina 1 bij eerste laadactie
+        huidigePagina = 1; 
         verwerkEnToonSchilderijen();
 
     } catch (error) {
@@ -90,37 +70,29 @@ async function laadSchilderijen() {
 function verwerkEnToonSchilderijen() {
     galerijContainer.innerHTML = '';
     
-    // 1. Filter de masterlijst op basis van de 5 actieve filters
     const gefilterdeLijst = alleSchilderijen.filter(data => {
-        // Status filter
         let matchStatus = false;
         if (huidigeStatusFilter === 'alles') matchStatus = true;
         else if (huidigeStatusFilter === 'beschikbaar' && (data.status || "beschikbaar") === 'beschikbaar') matchStatus = true;
         else if (huidigeStatusFilter === 'gereserveerd' && data.status === 'gereserveerd') matchStatus = true;
         else if (huidigeStatusFilter === 'niet meer beschikbaar' && data.status === 'niet-beschikbaar') matchStatus = true;
 
-        // Formaat filter
         let matchFormaat = (huidigeFormaatFilter === 'Alles' || (data.formaat || "Onbekend") === huidigeFormaatFilter);
-        
-        // Type filter
         let matchType = (huidigeTypeFilter === 'Alles' || (data.type || "Onbekend") === huidigeTypeFilter);
-        
-        // Sfeer filter
         let matchSfeer = (huidigeSfeerFilter === 'Alles' || (data.sfeer || "Overig") === huidigeSfeerFilter);
         
-        // Kleurtint filter
-        let matchKleurtint = (huidigeKleurtintFilter === 'Alles' || (data.kleurtint || "").trim() === huidigeKleurtintFilter);
+        // Matcht nu strak op de nieuwe dropdown opties
+        let ktData = data.kleurtint || "Overig";
+        let matchKleurtint = (huidigeKleurtintFilter === 'Alles' || ktData === huidigeKleurtintFilter);
 
         return matchStatus && matchFormaat && matchType && matchSfeer && matchKleurtint;
     });
 
-    // 2. Bereken Paginatie statistieken
     const totaalItems = gefilterdeLijst.length;
     const totaalPaginas = Math.ceil(totaalItems / itemsPerPagina) || 1;
     
     if (huidigePagina > totaalPaginas) huidigePagina = totaalPaginas;
     
-    // Pak alleen de 50 items van de huidige pagina (Lazy-rendering)
     const startIndex = (huidigePagina - 1) * itemsPerPagina;
     const paginaItems = gefilterdeLijst.slice(startIndex, startIndex + itemsPerPagina);
 
@@ -129,7 +101,6 @@ function verwerkEnToonSchilderijen() {
         return;
     }
 
-    // 3. Bouw uitsluitend de kaarten voor deze pagina op
     paginaItems.forEach((data) => {
         const kaart = document.createElement('div');
         
@@ -141,7 +112,7 @@ function verwerkEnToonSchilderijen() {
         const typeTekst = data.type || "Onbekend";
         const lijstTekst = data.lijst || "Onbekend";
         const sfeerTekst = data.sfeer || "Overig";
-        const kleurtintTekst = data.kleurtint || "Geen";
+        const kleurtintTekst = data.kleurtint || "Overig";
 
         let inhoud = `
             <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
@@ -199,7 +170,6 @@ function verwerkEnToonSchilderijen() {
         galerijContainer.appendChild(kaart);
     });
 
-    // 4. Teken de paginatie-knoppen onderaan het scherm (indien meer dan 1 pagina)
     if (totaalPaginas > 1) {
         const paginatieDiv = document.createElement('div');
         paginatieDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px auto; width: 100%; clear: both; font-family: sans-serif;';
@@ -314,18 +284,16 @@ bevestigKnop.addEventListener('click', async () => {
 sluitKnop.addEventListener('click', () => { lightbox.style.display = 'none'; });
 window.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.style.display = 'none'; });
 
-// Event Listeners voor de filterknoppen (Status)
 filterKnoppen.forEach(knop => {
     knop.addEventListener('click', () => {
         filterKnoppen.forEach(k => k.classList.remove('actief'));
         knop.classList.add('actief');
         huidigeStatusFilter = knop.innerText.toLowerCase(); 
-        huidigePagina = 1; // Altijd resetten naar pagina 1 bij filterwijziging
+        huidigePagina = 1; 
         verwerkEnToonSchilderijen();
     });
 });
 
-// Dropdown change listeners
 if (formaatDropdown) {
     formaatDropdown.addEventListener('change', (e) => {
         huidigeFormaatFilter = e.target.value; 
