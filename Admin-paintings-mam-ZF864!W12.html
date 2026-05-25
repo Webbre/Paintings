@@ -100,8 +100,21 @@
                     <option value="Overig">Overig</option>
                 </select>
 
-                <label>Kleurtint (Vrij invullen):</label>
-                <input type="text" id="kleurtint" placeholder="Bijv. Blauw, Rood, Warm, Pastel, Herfstkleuren" required>
+                <label>Kleurtint:</label>
+                <select id="kleurtint" required>
+                    <option value="Rood">Rood</option>
+                    <option value="Blauw">Blauw</option>
+                    <option value="Geel">Geel</option>
+                    <option value="Groen">Groen</option>
+                    <option value="Oranje">Oranje</option>
+                    <option value="Paars">Paars</option>
+                    <option value="Roze">Roze</option>
+                    <option value="Bruin">Bruin</option>
+                    <option value="Zwart">Zwart</option>
+                    <option value="Wit">Wit</option>
+                    <option value="Grijs">Grijs</option>
+                    <option value="Overig" selected>Overig</option>
+                </select>
 
                 <label>Lijst (Vrij invullen):</label>
                 <input type="text" id="lijst" placeholder="Bijv. Eikenhouten lijst, geen lijst, etc." required>
@@ -146,8 +159,21 @@
                 <option value="Abstract">Abstract</option>
                 <option value="Overig">Overig</option>
             </select>
-            <label>Kleurtint (Vrij invullen):</label>
-            <input type="text" id="edit-kleurtint" placeholder="Bijv. Warm rood">
+            <label>Kleurtint:</label>
+            <select id="edit-kleurtint">
+                <option value="Rood">Rood</option>
+                <option value="Blauw">Blauw</option>
+                <option value="Geel">Geel</option>
+                <option value="Groen">Groen</option>
+                <option value="Oranje">Oranje</option>
+                <option value="Paars">Paars</option>
+                <option value="Roze">Roze</option>
+                <option value="Bruin">Bruin</option>
+                <option value="Zwart">Zwart</option>
+                <option value="Wit">Wit</option>
+                <option value="Grijs">Grijs</option>
+                <option value="Overig">Overig</option>
+            </select>
             <label>Lijst (Vrij invullen):</label>
             <input type="text" id="edit-lijst" placeholder="Bijv. Eikenhouten lijst">
             
@@ -261,7 +287,7 @@
                             formaat: document.getElementById('formaat').value,
                             type: document.getElementById('type').value,
                             sfeer: document.getElementById('sfeer').value,
-                            kleurtint: document.getElementById('kleurtint').value.trim(),
+                            kleurtint: document.getElementById('kleurtint').value,
                             lijst: document.getElementById('lijst').value,
                             reservelijst: []
                         });
@@ -297,7 +323,6 @@
                         schilderijenArray.push({ id: doc.id, ...doc.data() });
                     });
 
-                    // Numerieke sortering
                     schilderijenArray.sort((a, b) => {
                         return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
                     });
@@ -323,7 +348,7 @@
                         const f = data.formaat || "Onbekend";
                         const t = data.type || "Onbekend";
                         const sf = data.sfeer || "Overig";
-                        const kt = data.kleurtint || "Geen";
+                        const kt = data.kleurtint || "Overig";
                         const l = data.lijst ? String(data.lijst) : "Onbekend";
                         
                         let infoHtml = `<strong>${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Sfeer: ${sf} | Kleurtint: ${kt} | Lijst: ${l}</span>`;
@@ -338,7 +363,6 @@
                             }
                         }
 
-                        // Veilig escapen van quotes voor JavaScript functies
                         const veiligeLijst = l.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         const veiligeSfeer = sf.replace(/'/g, "\\'");
@@ -366,9 +390,18 @@
                 document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
                 document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
                 document.getElementById('edit-sfeer').value = (sf !== 'Onbekend') ? sf : 'Overig';
-                document.getElementById('edit-kleurtint').value = (kt !== 'Geen') ? kt : '';
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
                 document.getElementById('edit-status').value = s;
+                
+                // Beveiliging: Check of de opgeslagen kleur in de dropdown-lijst bestaat, zo niet zet op 'Overig'
+                const selectElement = document.getElementById('edit-kleurtint');
+                const options = Array.from(selectElement.options).map(opt => opt.value);
+                if(options.includes(kt)) {
+                    selectElement.value = kt;
+                } else {
+                    selectElement.value = 'Overig';
+                }
+
                 document.getElementById('edit-modal').style.display = 'flex';
             };
 
@@ -383,7 +416,7 @@
                     formaat: document.getElementById('edit-formaat').value,
                     type: document.getElementById('edit-type').value,
                     sfeer: document.getElementById('edit-sfeer').value,
-                    kleurtint: document.getElementById('edit-kleurtint').value.trim(),
+                    kleurtint: document.getElementById('edit-kleurtint').value,
                     lijst: document.getElementById('edit-lijst').value,
                     status: document.getElementById('edit-status').value
                 });
