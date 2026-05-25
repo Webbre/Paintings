@@ -6,9 +6,9 @@
     <title>Beheerportaal</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f4f9; padding: 40px; color: #333; margin: 0; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1, h2 { color: #222; }
-        .form-groep { margin-bottom: 20px; }
+        .form-groep { margin-bottom: 20px; max-width: 600px;}
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="file"], input[type="text"], input[type="email"], input[type="password"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #f8f9fa; font-size: 16px; margin-bottom: 10px; }
         button { background-color: #28a745; color: white; border: none; padding: 12px 20px; cursor: pointer; font-size: 14px; border-radius: 4px; }
@@ -17,21 +17,59 @@
         #status-melding, #login-error { margin-top: 15px; font-weight: bold; color: #0066cc; }
         #login-error { color: #dc3545; }
         
+        /* NIEUW: De Grid Layout voor de schilderijen */
         ul { list-style-type: none; padding: 0; }
-        li { background: #f9f9f9; margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 10px; border-radius: 4px;}
-        .rij-boven { display: flex; justify-content: space-between; align-items: flex-start; }
         
-        li.status-gereserveerd { background-color: #fff3cd; border-color: #ffeeba; }
-        li.status-niet-beschikbaar { background-color: #e2e3e5; border-color: #d6d8db; }
-        .koper-info { display: block; font-size: 0.9em; color: #856404; margin-top: 5px; }
+        #schilderijen-lijst {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        /* Dwingt 4 naast elkaar op grote schermen */
+        @media (min-width: 1024px) {
+            #schilderijen-lijst {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        li { 
+            background: #f9f9f9; 
+            border: 1px solid #ddd; 
+            display: flex; 
+            flex-direction: column; 
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .admin-kaart-afbeelding {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+            background-color: #ebebeb;
+        }
+
+        .admin-kaart-content {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        li.status-gereserveerd .admin-kaart-content { background-color: #fff3cd; }
+        li.status-niet-beschikbaar .admin-kaart-content { background-color: #e2e3e5; }
+        
+        .koper-info { display: block; font-size: 0.9em; color: #856404; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 5px;}
         .reserve-info { display: block; font-size: 0.85em; color: #666; margin-top: 5px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 3px; }
         
-        .actie-knoppen { display: flex; gap: 5px; flex-wrap: wrap; }
-        .verwijder-knop { background-color: #dc3545; padding: 6px 12px; }
+        .actie-knoppen { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 15px; }
+        .verwijder-knop { background-color: #dc3545; padding: 8px; width: 100%; font-weight: bold;}
         .verwijder-knop:hover { background-color: #c82333; }
-        .beschikbaar-knop { background-color: #007bff; padding: 6px 12px; }
+        .beschikbaar-knop { background-color: #007bff; padding: 8px; width: 100%; font-weight: bold;}
         .beschikbaar-knop:hover { background-color: #0056b3; }
-        .bewerk-knop { background-color: #ffc107; color: #000; padding: 6px 12px; }
+        .bewerk-knop { background-color: #ffc107; color: #000; padding: 8px; width: 100%; font-weight: bold;}
         .bewerk-knop:hover { background-color: #e0a800; }
         
         .uitlog-knop { background-color: #6c757d; float: right; padding: 8px 15px; font-size: 12px; margin-top: -5px; }
@@ -124,8 +162,8 @@
 
         <div id="status-melding"></div>
         <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
-        <h2>Huidige schilderijen</h2>
-        <ul id="schilderijen-lijst"><li>Laden...</li></ul>
+        <h2>Huidige schilderijen (Beheer)</h2>
+        <ul id="schilderijen-lijst"><li>Laden... ⏳</li></ul>
     </div>
 
     <div id="edit-modal">
@@ -351,14 +389,14 @@
                         const kt = data.kleurtint || "Overig";
                         const l = data.lijst ? String(data.lijst) : "Onbekend";
                         
-                        let infoHtml = `<strong>${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><span style="font-size:0.9em; color:#666;">Formaat: ${f} | Type: ${t} | Sfeer: ${sf} | Kleurtint: ${kt} | Lijst: ${l}</span>`;
+                        let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
                         
                         if (s === 'gereserveerd') {
-                            infoHtml += `<span class="koper-info">👤 <strong>Geclaimd door:</strong> ${data.koper_naam} (${data.koper_email}) - "${data.koper_bericht || ''}"</span>`;
+                            infoHtml += `<div class="koper-info">👤 <strong>Geclaimd door:</strong><br>${data.koper_naam} (${data.koper_email})<br><em>"${data.koper_bericht || 'Geen bericht'}"</em></div>`;
                             
                             if (data.reservelijst && data.reservelijst.length > 0) {
                                 data.reservelijst.forEach((res, index) => {
-                                    infoHtml += `<span class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</span>`;
+                                    infoHtml += `<div class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</div>`;
                                 });
                             }
                         }
@@ -367,13 +405,15 @@
                         const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         const veiligeSfeer = sf.replace(/'/g, "\\'");
 
+                        // De nieuwe Card opbouw met afbeelding!
                         li.innerHTML = `
-                            <div class="rij-boven">
-                                <div>${infoHtml}</div>
+                            <img src="${data.afbeelding_url}" alt="${data.titel}" class="admin-kaart-afbeelding" loading="lazy">
+                            <div class="admin-kaart-content">
+                                <div style="margin-bottom: 10px;">${infoHtml}</div>
                                 <div class="actie-knoppen">
-                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}')">Bewerken</button>
-                                    ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer / Schuif door</button>` : ''}
-                                    <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">X</button>
+                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}')">Kenmerken Bewerken</button>
+                                    ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer Reservering</button>` : ''}
+                                    <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">Schilderij Verwijderen</button>
                                 </div>
                             </div>
                         `;
@@ -393,7 +433,6 @@
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
                 document.getElementById('edit-status').value = s;
                 
-                // Beveiliging: Check of de opgeslagen kleur in de dropdown-lijst bestaat, zo niet zet op 'Overig'
                 const selectElement = document.getElementById('edit-kleurtint');
                 const options = Array.from(selectElement.options).map(opt => opt.value);
                 if(options.includes(kt)) {
@@ -457,15 +496,4 @@
             };
 
             window.verwijderSchilderij = async function(id) {
-                if(confirm("Verwijderen?")) {
-                    await db.collection("schilderijen").doc(id).delete();
-                    laadSchilderijenLijst(); 
-                }
-            };
-            
-        } catch (error) {
-            document.getElementById('login-error').innerText = "Systeemfout bij laden: " + error.message;
-        }
-    </script>
-</body>
-</html>
+                if(confirm("Let op: We
