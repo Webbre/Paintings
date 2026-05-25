@@ -7,7 +7,6 @@ const firebaseConfig = {
     appId: "1:176727832277:web:aa51107213ed9d7a8b945c"
 };
 
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -82,7 +81,6 @@ function verwerkEnToonSchilderijen() {
         let matchType = (huidigeTypeFilter === 'Alles' || (data.type || "Onbekend") === huidigeTypeFilter);
         let matchSfeer = (huidigeSfeerFilter === 'Alles' || (data.sfeer || "Overig") === huidigeSfeerFilter);
         
-        // Matcht nu strak op de nieuwe dropdown opties
         let ktData = data.kleurtint || "Overig";
         let matchKleurtint = (huidigeKleurtintFilter === 'Alles' || ktData === huidigeKleurtintFilter);
 
@@ -115,12 +113,15 @@ function verwerkEnToonSchilderijen() {
         const sfeerTekst = data.sfeer || "Overig";
         const kleurtintTekst = data.kleurtint || "Overig";
 
+        // HIER IS HET OPGELEST: Sfeer en Kleurtint staan nu ook op het overzichtskaartje!
         let inhoud = `
             <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
             <h3>${data.titel}</h3>
             <p class="formaat-label">
                 Formaat: ${f}<br>
                 Type: ${typeTekst}<br>
+                Sfeer: ${sfeerTekst}<br>
+                Kleurtint: ${kleurtintTekst}<br>
                 Lijst: ${lijstTekst}
             </p> 
         `;
