@@ -1,20 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
+    <meta charset="UTF-8">
     <title>Foto Export</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        img { max-width: 200px; margin: 10px; border: 1px solid #ccc; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        h1 { color: #333; }
+        #fotos { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            margin-top: 20px;
+        }
+        .kaart {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 220px;
+        }
+        img { 
+            width: 200px; 
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: #eee;
+        }
+        p { margin: 10px 0 0 0; color: #555; font-size: 14px; }
     </style>
 </head>
 <body>
     <h1>Jouw Schilderijen Export</h1>
-    <p>Gebruik een extensie zoals 'Image Downloader' om ze allemaal tegelijk op te slaan.</p>
-    <div id="fotos">Laden...</div>
+    <p>Alle foto's staan hier nu in perfecte volgorde. Gebruik je Chrome-extensie om ze te downloaden.</p>
+    <div id="fotos">Bestanden ophalen uit de database... ⏳</div>
 
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
     <script>
+        // Jouw Firebase connectie
         firebase.initializeApp({
             apiKey: "AIzaSyBvA_Jck1PO6CDbI1cngZBpxO2ETAb9_GY",
             authDomain: "paintings-be46b.firebaseapp.com",
@@ -23,11 +47,35 @@
         const db = firebase.firestore();
         
         db.collection("schilderijen").get().then((snapshot) => {
-            document.getElementById('fotos').innerHTML = '';
+            let alleSchilderijen = [];
+            
             snapshot.forEach(doc => {
-                const data = doc.data();
-                document.getElementById('fotos').innerHTML += `<img src="${data.afbeelding_url}" alt="${data.titel}">`;
+                alleSchilderijen.push(doc.data());
             });
+
+            // Zorg dat ze netjes gesorteerd zijn (1, 2, 3... 100)
+            alleSchilderijen.sort((a, b) => {
+                return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
+            });
+
+            const container = document.getElementById('fotos');
+            container.innerHTML = '';
+
+            alleSchilderijen.forEach(data => {
+                // Maak een schone bestandsnaam voor de extensie (bijv: "Schilderij 1.jpg")
+                const schoneNaam = (data.titel || "Onbekend").replace(/[^a-zA-Z0-9 ]/g, "") + ".jpg";
+                
+                container.innerHTML += `
+                    <div class="kaart">
+                        <a href="${data.afbeelding_url}" download="${schoneNaam}" target="_blank">
+                            <img src="${data.afbeelding_url}" alt="${schoneNaam}" title="${schoneNaam}">
+                        </a>
+                        <p><strong>${data.titel}</strong></p>
+                    </div>
+                `;
+            });
+        }).catch(error => {
+            document.getElementById('fotos').innerHTML = `<p style="color: red;">Fout bij laden: ${error.message}</p>`;
         });
     </script>
 </body>
