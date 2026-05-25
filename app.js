@@ -17,7 +17,11 @@ const lightboxTitel = document.getElementById('lightbox-titel');
 const lightboxFormaat = document.getElementById('lightbox-formaat'); 
 const sluitKnop = document.querySelector('.sluit-knop');
 const filterKnoppen = document.querySelectorAll('.filter-knop');
+
 const formaatDropdown = document.getElementById('filter-formaat');
+const typeDropdown = document.getElementById('filter-type');
+const sfeerDropdown = document.getElementById('filter-sfeer');
+const kleurtintDropdown = document.getElementById('filter-kleurtint');
 
 const formulierTitel = document.getElementById('formulier-titel');
 const invulVelden = document.getElementById('invul-velden');
@@ -29,102 +33,207 @@ const bevestigKnop = document.getElementById('bevestig-reservering');
 let huidigSchilderijId = null; 
 let huidigeStatus = null;
 
+// Filter Status State
 let huidigeStatusFilter = 'alles';
 let huidigeFormaatFilter = 'Alles';
+let huidigeTypeFilter = 'Alles';
+let huidigeSfeerFilter = 'Alles';
+let huidigeKleurtintFilter = 'Alles';
+
+// Paginatie Status State
+let alleSchilderijen = [];
+let huidigePagina = 1;
+const itemsPerPagina = 50;
 
 async function laadSchilderijen() {
     galerijContainer.innerHTML = '<p style="text-align: center; width: 100%;">Schilderijen laden... ⏳</p>'; 
     
     try {
         const querySnapshot = await db.collection("schilderijen").get();
-        galerijContainer.innerHTML = ''; 
+        alleSchilderijen = [];
         
-        let schilderijenLijst = [];
         querySnapshot.forEach((doc) => {
-            schilderijenLijst.push({ id: doc.id, ...doc.data() });
+            alleSchilderijen.push({ id: doc.id, ...doc.data() });
         });
 
-        schilderijenLijst.sort((a, b) => {
+        // Wiskundige nummering sortering
+        alleSchilderijen.sort((a, b) => {
             return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
         });
         
-        schilderijenLijst.forEach((data) => {
-            const kaart = document.createElement('div');
+        // Dynamisch vullen van de Kleurtint Dropdown op basis van unieke waarden uit de database
+        if (kleurtintDropdown) {
+            const huidigeSelectie = kleurtintDropdown.value;
+            kleurtintDropdown.innerHTML = '<option value="Alles">Alle kleurtinten</option>';
             
-            let f = "Onbekend";
-            if (data.formaat) {
-                f = String(data.formaat).trim();
-            }
+            // Haal alle unieke, niet-lege tinten op
+            const uniekeTinten = [...new Set(alleSchilderijen.map(s => (s.kleurtint || "").trim()).filter(Boolean))].sort();
             
-            const veiligeStatus = data.status || "beschikbaar";
-            kaart.className = `schilderij-kaart ${veiligeStatus}`;
-            kaart.dataset.formaat = f; 
-            
-            const typeTekst = data.type || "Onbekend";
-            const lijstTekst = data.lijst || "Onbekend";
-
-            let inhoud = `
-                <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
-                <h3>${data.titel}</h3>
-                <p class="formaat-label">
-                    Formaat: ${f}<br>
-                    Type: ${typeTekst}<br>
-                    Lijst: ${lijstTekst}
-                </p> 
-            `;
-
-            if (veiligeStatus === 'gereserveerd') {
-                inhoud += `<div class="status-label">Gereserveerd</div>`;
-            } else if (veiligeStatus === 'niet-beschikbaar') {
-                inhoud += `<div class="status-label" style="background-color: #555; color: #fff;">Niet meer beschikbaar</div>`;
-            }
-            
-            kaart.innerHTML = inhoud;
-
-            if (veiligeStatus !== 'niet-beschikbaar') {
-                kaart.addEventListener('click', () => {
-                    huidigSchilderijId = data.id; 
-                    huidigeStatus = veiligeStatus;
-                    
-                    lightboxFoto.src = data.afbeelding_url;
-                    lightboxTitel.innerText = data.titel;
-                    lightboxFormaat.innerHTML = `Formaat: ${f} <br> Type: ${typeTekst} <br> Lijst: ${lijstTekst}`; 
-                    
-                    koperNaamInput.value = '';
-                    koperEmailInput.value = '';
-                    koperBerichtInput.value = ''; 
-                    
-                    if (veiligeStatus === 'beschikbaar') {
-                        formulierTitel.innerText = "Interesse in dit schilderij?";
-                        bevestigKnop.innerText = "Bevestig reservering";
-                        invulVelden.style.display = 'flex';
-                    } else if (veiligeStatus === 'gereserveerd') {
-                        const reservelijst = data.reservelijst || [];
-                        if (reservelijst.length < 2) {
-                            formulierTitel.innerText = "Schilderij is al gereserveerd. Wil je op de reservelijst?";
-                            bevestigKnop.innerText = "Plaats op reservelijst";
-                            invulVelden.style.display = 'flex';
-                        } else {
-                            formulierTitel.innerText = "Dit schilderij is gereserveerd en de reservelijst zit momenteel vol.";
-                            invulVelden.style.display = 'none';
-                        }
-                    }
-                    
-                    lightbox.style.display = 'block';
-                });
-            } else {
-                kaart.style.cursor = 'default';
-                kaart.style.opacity = '0.75';
-            }
-
-            galerijContainer.appendChild(kaart);
-        });
+            uniekeTinten.forEach(tint => {
+                const opt = document.createElement('option');
+                opt.value = tint;
+                opt.innerText = tint;
+                if (tint === huidigeSelectie) opt.selected = true;
+                kleurtintDropdown.appendChild(opt);
+            });
+        }
         
-        pasFiltersToe();
+        huidigePagina = 1; // Reset naar pagina 1 bij eerste laadactie
+        verwerkEnToonSchilderijen();
 
     } catch (error) {
         console.error(error);
         galerijContainer.innerHTML = `<p style="color: red; text-align: center; width: 100%; font-weight: bold;">Fout bij inladen: ${error.message}</p>`;
+    }
+}
+
+function verwerkEnToonSchilderijen() {
+    galerijContainer.innerHTML = '';
+    
+    // 1. Filter de masterlijst op basis van de 5 actieve filters
+    const gefilterdeLijst = alleSchilderijen.filter(data => {
+        // Status filter
+        let matchStatus = false;
+        if (huidigeStatusFilter === 'alles') matchStatus = true;
+        else if (huidigeStatusFilter === 'beschikbaar' && (data.status || "beschikbaar") === 'beschikbaar') matchStatus = true;
+        else if (huidigeStatusFilter === 'gereserveerd' && data.status === 'gereserveerd') matchStatus = true;
+        else if (huidigeStatusFilter === 'niet meer beschikbaar' && data.status === 'niet-beschikbaar') matchStatus = true;
+
+        // Formaat filter
+        let matchFormaat = (huidigeFormaatFilter === 'Alles' || (data.formaat || "Onbekend") === huidigeFormaatFilter);
+        
+        // Type filter
+        let matchType = (huidigeTypeFilter === 'Alles' || (data.type || "Onbekend") === huidigeTypeFilter);
+        
+        // Sfeer filter
+        let matchSfeer = (huidigeSfeerFilter === 'Alles' || (data.sfeer || "Overig") === huidigeSfeerFilter);
+        
+        // Kleurtint filter
+        let matchKleurtint = (huidigeKleurtintFilter === 'Alles' || (data.kleurtint || "").trim() === huidigeKleurtintFilter);
+
+        return matchStatus && matchFormaat && matchType && matchSfeer && matchKleurtint;
+    });
+
+    // 2. Bereken Paginatie statistieken
+    const totaalItems = gefilterdeLijst.length;
+    const totaalPaginas = Math.ceil(totaalItems / itemsPerPagina) || 1;
+    
+    if (huidigePagina > totaalPaginas) huidigePagina = totaalPaginas;
+    
+    // Pak alleen de 50 items van de huidige pagina (Lazy-rendering)
+    const startIndex = (huidigePagina - 1) * itemsPerPagina;
+    const paginaItems = gefilterdeLijst.slice(startIndex, startIndex + itemsPerPagina);
+
+    if (paginaItems.length === 0) {
+        galerijContainer.innerHTML = '<p style="text-align: center; width: 100%; color: #666; margin-top: 20px;">Geen schilderijen gevonden met deze filtercombinatie.</p>';
+        return;
+    }
+
+    // 3. Bouw uitsluitend de kaarten voor deze pagina op
+    paginaItems.forEach((data) => {
+        const kaart = document.createElement('div');
+        
+        const f = data.formaat || "Onbekend";
+        const veiligeStatus = data.status || "beschikbaar";
+        kaart.className = `schilderij-kaart ${veiligeStatus}`;
+        kaart.dataset.formaat = f; 
+        
+        const typeTekst = data.type || "Onbekend";
+        const lijstTekst = data.lijst || "Onbekend";
+        const sfeerTekst = data.sfeer || "Overig";
+        const kleurtintTekst = data.kleurtint || "Geen";
+
+        let inhoud = `
+            <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
+            <h3>${data.titel}</h3>
+            <p class="formaat-label">
+                Formaat: ${f}<br>
+                Type: ${typeTekst}<br>
+                Lijst: ${lijstTekst}
+            </p> 
+        `;
+
+        if (veiligeStatus === 'gereserveerd') {
+            inhoud += `<div class="status-label">Gereserveerd</div>`;
+        } else if (veiligeStatus === 'niet-beschikbaar') {
+            inhoud += `<div class="status-label" style="background-color: #555; color: #fff;">Niet meer beschikbaar</div>`;
+        }
+        
+        kaart.innerHTML = inhoud;
+
+        if (veiligeStatus !== 'niet-beschikbaar') {
+            kaart.addEventListener('click', () => {
+                huidigSchilderijId = data.id; 
+                huidigeStatus = veiligeStatus;
+                
+                lightboxFoto.src = data.afbeelding_url;
+                lightboxTitel.innerText = data.titel;
+                lightboxFormaat.innerHTML = `Formaat: ${f} <br> Type: ${typeTekst} <br> Sfeer: ${sfeerTekst} <br> Kleurtint: ${kleurtintTekst} <br> Lijst: ${lijstTekst}`; 
+                
+                koperNaamInput.value = '';
+                koperEmailInput.value = '';
+                koperBerichtInput.value = ''; 
+                
+                if (veiligeStatus === 'beschikbaar') {
+                    formulierTitel.innerText = "Interesse in dit schilderij?";
+                    bevestigKnop.innerText = "Bevestig reservering";
+                    invulVelden.style.display = 'flex';
+                } else if (veiligeStatus === 'gereserveerd') {
+                    const reservelijst = data.reservelijst || [];
+                    if (reservelijst.length < 2) {
+                        formulierTitel.innerText = "Schilderij is al gereserveerd. Wil je op de reservelijst?";
+                        bevestigKnop.innerText = "Plaats op reservelijst";
+                        invulVelden.style.display = 'flex';
+                    } else {
+                        formulierTitel.innerText = "Dit schilderij is gereserveerd en de reservelijst zit momenteel vol.";
+                        invulVelden.style.display = 'none';
+                    }
+                }
+                lightbox.style.display = 'block';
+            });
+        } else {
+            kaart.style.cursor = 'default';
+            kaart.style.opacity = '0.75';
+        }
+
+        galerijContainer.appendChild(kaart);
+    });
+
+    // 4. Teken de paginatie-knoppen onderaan het scherm (indien meer dan 1 pagina)
+    if (totaalPaginas > 1) {
+        const paginatieDiv = document.createElement('div');
+        paginatieDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px auto; width: 100%; clear: both; font-family: sans-serif;';
+        
+        const knopVorige = document.createElement('button');
+        knopVorige.innerText = '← Vorige';
+        knopVorige.disabled = huidigePagina === 1;
+        knopVorige.style.cssText = 'padding: 8px 16px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;';
+        if (huidigePagina === 1) knopVorige.style.opacity = '0.4';
+        knopVorige.onclick = () => {
+            huidigePagina--;
+            verwerkEnToonSchilderijen();
+            window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
+        };
+
+        const indicator = document.createElement('span');
+        indicator.innerText = `Pagina ${huidigePagina} van ${totaalPaginas} (${totaalItems} items)`;
+        indicator.style.cssText = 'color: #495057; font-size: 0.9em; font-weight: bold;';
+
+        const knopVolgende = document.createElement('button');
+        knopVolgende.innerText = 'Volgende →';
+        knopVolgende.disabled = huidigePagina === totaalPaginas;
+        knopVolgende.style.cssText = 'padding: 8px 16px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;';
+        if (huidigePagina === totaalPaginas) knopVolgende.style.opacity = '0.4';
+        knopVolgende.onclick = () => {
+            huidigePagina++;
+            verwerkEnToonSchilderijen();
+            window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
+        };
+
+        paginatieDiv.appendChild(knopVorige);
+        paginatieDiv.appendChild(indicator);
+        paginatieDiv.appendChild(knopVolgende);
+        galerijContainer.appendChild(paginatieDiv);
     }
 }
 
@@ -138,26 +247,19 @@ bevestigKnop.addEventListener('click', async () => {
         return;
     }
 
-    // Zet de knop tijdelijk uit om dubbelklikken te voorkomen
     bevestigKnop.disabled = true;
     const origineleTekst = bevestigKnop.innerText;
     bevestigKnop.innerText = "Bezig met controleren... ⏳";
 
     try {
-        // --- NIEUW: CHECK OP MAXIMAAL 2 RESERVERINGEN ---
-        // Haal alle gereserveerde schilderijen op om te tellen
         const gereserveerdeDocs = await db.collection("schilderijen").where("status", "==", "gereserveerd").get();
         let emailTelling = 0;
 
         gereserveerdeDocs.forEach(doc => {
             const d = doc.data();
-            
-            // Controleer of de persoon de hoofdkoper is
             if (d.koper_email && d.koper_email.toLowerCase() === email.toLowerCase()) {
                 emailTelling++;
             }
-            
-            // Controleer of de persoon op een reservelijst staat
             if (d.reservelijst && Array.isArray(d.reservelijst)) {
                 d.reservelijst.forEach(res => {
                     if (res.email && res.email.toLowerCase() === email.toLowerCase()) {
@@ -167,16 +269,13 @@ bevestigKnop.addEventListener('click', async () => {
             }
         });
 
-        // Als ze al 2 of meer (wachtlijst)reserveringen hebben, breek het proces af!
         if (emailTelling >= 2) {
             alert("Let op: Je hebt het maximum van 2 reserveringen voor dit e-mailadres bereikt. Om iedereen een eerlijke kans te geven, is het helaas niet mogelijk om er meer te reserveren.");
             bevestigKnop.disabled = false;
             bevestigKnop.innerText = origineleTekst;
-            return; // Stop hier
+            return; 
         }
-        // ------------------------------------------------
 
-        // Als ze hier aankomen, is de check geslaagd en gaan we opslaan
         bevestigKnop.innerText = "Bezig met opslaan... ⏳";
         const docRef = db.collection("schilderijen").doc(huidigSchilderijId);
         
@@ -207,7 +306,6 @@ bevestigKnop.addEventListener('click', async () => {
         console.error("Fout: ", error);
         alert("Er ging iets mis. Probeer het later nog eens.");
     } finally {
-        // Herstel de knop altijd na een succesvolle (of mislukte) poging
         bevestigKnop.disabled = false;
         bevestigKnop.innerText = origineleTekst;
     }
@@ -216,48 +314,44 @@ bevestigKnop.addEventListener('click', async () => {
 sluitKnop.addEventListener('click', () => { lightbox.style.display = 'none'; });
 window.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.style.display = 'none'; });
 
+// Event Listeners voor de filterknoppen (Status)
 filterKnoppen.forEach(knop => {
     knop.addEventListener('click', () => {
         filterKnoppen.forEach(k => k.classList.remove('actief'));
         knop.classList.add('actief');
-
         huidigeStatusFilter = knop.innerText.toLowerCase(); 
-        pasFiltersToe();
+        huidigePagina = 1; // Altijd resetten naar pagina 1 bij filterwijziging
+        verwerkEnToonSchilderijen();
     });
 });
 
+// Dropdown change listeners
 if (formaatDropdown) {
     formaatDropdown.addEventListener('change', (e) => {
         huidigeFormaatFilter = e.target.value; 
-        pasFiltersToe();
+        huidigePagina = 1;
+        verwerkEnToonSchilderijen();
     });
 }
-
-function pasFiltersToe() {
-    const alleKaarten = document.querySelectorAll('.schilderij-kaart');
-
-    alleKaarten.forEach(kaart => {
-        let magTonenStatus = false;
-        
-        if (huidigeStatusFilter === 'alles') {
-            magTonenStatus = true;
-        } else if (huidigeStatusFilter === 'beschikbaar' && kaart.classList.contains('beschikbaar')) {
-            magTonenStatus = true;
-        } else if (huidigeStatusFilter === 'gereserveerd' && kaart.classList.contains('gereserveerd')) {
-            magTonenStatus = true;
-        } else if (huidigeStatusFilter === 'niet meer beschikbaar' && kaart.classList.contains('niet-beschikbaar')) {
-            magTonenStatus = true;
-        }
-
-        let magTonenFormaat = false;
-        if (huidigeFormaatFilter === 'Alles') magTonenFormaat = true;
-        else if (kaart.dataset.formaat === huidigeFormaatFilter) magTonenFormaat = true;
-
-        if (magTonenStatus && magTonenFormaat) {
-            kaart.style.display = '';
-        } else {
-            kaart.style.display = 'none';
-        }
+if (typeDropdown) {
+    typeDropdown.addEventListener('change', (e) => {
+        huidigeTypeFilter = e.target.value; 
+        huidigePagina = 1;
+        verwerkEnToonSchilderijen();
+    });
+}
+if (sfeerDropdown) {
+    sfeerDropdown.addEventListener('change', (e) => {
+        huidigeSfeerFilter = e.target.value; 
+        huidigePagina = 1;
+        verwerkEnToonSchilderijen();
+    });
+}
+if (kleurtintDropdown) {
+    kleurtintDropdown.addEventListener('change', (e) => {
+        huidigeKleurtintFilter = e.target.value; 
+        huidigePagina = 1;
+        verwerkEnToonSchilderijen();
     });
 }
 
