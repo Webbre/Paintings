@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Foto Export</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        img { max-width: 200px; margin: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Jouw Schilderijen Export</h1>
+    <p>Gebruik een extensie zoals 'Image Downloader' om ze allemaal tegelijk op te slaan.</p>
+    <div id="fotos">Laden...</div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyBvA_Jck1PO6CDbI1cngZBpxO2ETAb9_GY",
+            authDomain: "paintings-be46b.firebaseapp.com",
+            projectId: "paintings-be46b"
+        });
+        const db = firebase.firestore();
+        
+        db.collection("schilderijen").get().then((snapshot) => {
+            document.getElementById('fotos').innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                document.getElementById('fotos').innerHTML += `<img src="${data.afbeelding_url}" alt="${data.titel}">`;
+            });
+        });
+    </script>
+</body>
+</html>
