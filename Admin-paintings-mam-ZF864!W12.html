@@ -128,11 +128,13 @@
 
                 <label>Sfeer:</label>
                 <select id="sfeer" required>
+                    <option value="Abstract">Abstract</option>
                     <option value="Bloemen">Bloemen</option>
+                    <option value="Bomen">Bomen</option>
+                    <option value="Dieren">Dieren</option>
+                    <option value="Landschappen">Landschappen</option>
                     <option value="Mensen">Mensen</option>
                     <option value="Zeegezichten">Zeegezichten</option>
-                    <option value="Landschappen">Landschappen</option>
-                    <option value="Abstract">Abstract</option>
                     <option value="Overig">Overig</option>
                 </select>
 
@@ -208,11 +210,13 @@
                 <label for="admin-filter-sfeer" style="font-size: 0.8em; color: #495057; margin: 0;">Sfeer:</label>
                 <select id="admin-filter-sfeer" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
                     <option value="Alles">Alle sferen</option>
+                    <option value="Abstract">Abstract</option>
                     <option value="Bloemen">Bloemen</option>
+                    <option value="Bomen">Bomen</option>
+                    <option value="Dieren">Dieren</option>
+                    <option value="Landschappen">Landschappen</option>
                     <option value="Mensen">Mensen</option>
                     <option value="Zeegezichten">Zeegezichten</option>
-                    <option value="Landschappen">Landschappen</option>
-                    <option value="Abstract">Abstract</option>
                     <option value="Overig">Overig</option>
                 </select>
             </div>
@@ -275,11 +279,13 @@
             </select>
             <label>Sfeer:</label>
             <select id="edit-sfeer">
+                <option value="Abstract">Abstract</option>
                 <option value="Bloemen">Bloemen</option>
+                <option value="Bomen">Bomen</option>
+                <option value="Dieren">Dieren</option>
+                <option value="Landschappen">Landschappen</option>
                 <option value="Mensen">Mensen</option>
                 <option value="Zeegezichten">Zeegezichten</option>
-                <option value="Landschappen">Landschappen</option>
-                <option value="Abstract">Abstract</option>
                 <option value="Overig">Overig</option>
             </select>
             <label>Kleurtint:</label>
@@ -341,7 +347,6 @@
             const loginError = document.getElementById('login-error');
             let huidigBewerkId = null;
 
-            // NIEUW: Global array en actieve filter states voor admin panel
             let alleAdminSchilderijen = [];
             let filterBeheerder = 'Alles';
             let filterFormaat = 'Alles';
@@ -471,7 +476,6 @@
                 }
             });
 
-            // Slaat de database snapshot op in een master array
             async function laadSchilderijenLijst() {
                 const lijst = document.getElementById('schilderijen-lijst');
                 try {
@@ -493,7 +497,6 @@
                 }
             }
 
-            // NIEUW: Filtert lokaal de array en bouwt het grid visueel op
             function verwerkEnToonAdminSchilderijen() {
                 const lijst = document.getElementById('schilderijen-lijst');
                 lijst.innerHTML = '';
@@ -700,7 +703,6 @@
                 }
             };
 
-            // NIEUW: Event Listeners voor de admin filter dropdowns
             document.getElementById('admin-filter-beheerder').addEventListener('change', (e) => {
                 filterBeheerder = e.target.value;
                 verwerkEnToonAdminSchilderijen();
