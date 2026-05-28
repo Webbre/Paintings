@@ -41,7 +41,9 @@ let huidigeKleurtintFilter = 'Alles';
 
 let alleSchilderijen = [];
 let huidigePagina = 1;
-const itemsPerPagina = 50;
+
+// AANGEPAST: 48 is perfect deelbaar door 2, 3 en 4 kolommen voor een strak raster!
+const itemsPerPagina = 48; 
 
 async function laadSchilderijen() {
     galerijContainer.innerHTML = '<p style="text-align: center; width: 100%;">Schilderijen laden... ⏳</p>'; 
@@ -67,13 +69,10 @@ async function laadSchilderijen() {
     }
 }
 
-// Slimme hulpfunctie om een complete, functionele paginabalk te genereren
 function creeerPaginatieBalk(totaalPaginas, totaalItems) {
     const paginatieDiv = document.createElement('div');
-    // grid-column: 1 / -1 zorgt ervoor dat de balk over de hele breedte van het raster spant
     paginatieDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; clear: both; font-family: system-ui, sans-serif; flex-wrap: wrap; grid-column: 1 / -1;';
     
-    // 1. De Vorige Knop
     const knopVorige = document.createElement('button');
     knopVorige.innerText = '←';
     knopVorige.disabled = huidigePagina === 1;
@@ -92,7 +91,6 @@ function creeerPaginatieBalk(totaalPaginas, totaalItems) {
     }
     paginatieDiv.appendChild(knopVorige);
 
-    // 2. De Cijferknopjes
     for (let i = 1; i <= totaalPaginas; i++) {
         const cijferKnop = document.createElement('button');
         cijferKnop.innerText = i;
@@ -122,7 +120,6 @@ function creeerPaginatieBalk(totaalPaginas, totaalItems) {
         paginatieDiv.appendChild(cijferKnop);
     }
 
-    // 3. De Volgende Knop
     const knopVolgende = document.createElement('button');
     knopVolgende.innerText = '→';
     knopVolgende.disabled = huidigePagina === totaalPaginas;
@@ -141,7 +138,6 @@ function creeerPaginatieBalk(totaalPaginas, totaalItems) {
     }
     paginatieDiv.appendChild(knopVolgende);
 
-    // 4. Het Resultaten Label
     const resultatenLabel = document.createElement('div');
     resultatenLabel.style.cssText = 'width: 100%; text-align: center; margin-top: 10px; color: #6c757d; font-size: 0.85em; font-weight: 500;';
     resultatenLabel.innerText = `Totaal: ${totaalItems} schilderijen verdeeld over ${totaalPaginas} pagina's`;
@@ -183,7 +179,6 @@ function verwerkEnToonSchilderijen() {
         return;
     }
 
-    // 1. BOUW DE PAGINATIE AAN DE BOVENKANT (indien meer dan 1 pagina)
     if (totaalPaginas > 1) {
         const paginatieTop = creeerPaginatieBalk(totaalPaginas, totaalItems);
         paginatieTop.style.marginBottom = '35px';
@@ -191,7 +186,6 @@ function verwerkEnToonSchilderijen() {
         galerijContainer.appendChild(paginatieTop);
     }
 
-    // 2. Bouw uitsluitend de kaarten voor deze pagina op
     paginaItems.forEach((data) => {
         const kaart = document.createElement('div');
         
@@ -263,7 +257,6 @@ function verwerkEnToonSchilderijen() {
         galerijContainer.appendChild(kaart);
     });
 
-    // 3. BOUW DE PAGINATIE AAN DE ONDERKANT (indien meer dan 1 pagina)
     if (totaalPaginas > 1) {
         const paginatieBottom = creeerPaginatieBalk(totaalPaginas, totaalItems);
         paginatieBottom.style.marginTop = '45px';
