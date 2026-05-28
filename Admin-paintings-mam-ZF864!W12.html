@@ -168,7 +168,79 @@
 
         <div id="status-melding"></div>
         <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
+        
         <h2>Huidige schilderijen (Beheer)</h2>
+
+        <div class="admin-filters-balk" style="display: flex; gap: 12px; align-items: center; margin-bottom: 25px; padding: 15px; background-color: #e9ecef; border-radius: 6px; flex-wrap: wrap;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="admin-filter-beheerder" style="font-size: 0.8em; color: #495057; margin: 0;">Locatie:</label>
+                <select id="admin-filter-beheerder" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
+                    <option value="Alles">Alle locaties</option>
+                    <option value="Onbekend">Nog niet verdeeld / Onbekend</option>
+                    <option value="Ewout">Ewout</option>
+                    <option value="Arjen">Arjen</option>
+                    <option value="Michiel">Michiel</option>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="admin-filter-formaat" style="font-size: 0.8em; color: #495057; margin: 0;">Formaat:</label>
+                <select id="admin-filter-formaat" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
+                    <option value="Alles">Alle formaten</option>
+                    <option value="Groot">Groot</option>
+                    <option value="Middelgroot">Middelgroot</option>
+                    <option value="Middel">Middel</option>
+                    <option value="Klein">Klein</option>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="admin-filter-type" style="font-size: 0.8em; color: #495057; margin: 0;">Type:</label>
+                <select id="admin-filter-type" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
+                    <option value="Alles">Alle typen</option>
+                    <option value="Doek">Doek</option>
+                    <option value="Paneel">Paneel</option>
+                    <option value="Papier">Papier</option>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="admin-filter-sfeer" style="font-size: 0.8em; color: #495057; margin: 0;">Sfeer:</label>
+                <select id="admin-filter-sfeer" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
+                    <option value="Alles">Alle sferen</option>
+                    <option value="Bloemen">Bloemen</option>
+                    <option value="Mensen">Mensen</option>
+                    <option value="Zeegezichten">Zeegezichten</option>
+                    <option value="Landschappen">Landschappen</option>
+                    <option value="Abstract">Abstract</option>
+                    <option value="Overig">Overig</option>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="admin-filter-kleurtint" style="font-size: 0.8em; color: #495057; margin: 0;">Kleurtint:</label>
+                <select id="admin-filter-kleurtint" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
+                    <option value="Alles">Alle kleurtinten</option>
+                    <option value="Rood">Rood</option>
+                    <option value="Blauw">Blauw</option>
+                    <option value="Geel">Geel</option>
+                    <option value="Groen">Groen</option>
+                    <option value="Oranje">Oranje</option>
+                    <option value="Paars">Paars</option>
+                    <option value="Roze">Roze</option>
+                    <option value="Bruin">Bruin</option>
+                    <option value="Zwart">Zwart</option>
+                    <option value="Wit">Wit</option>
+                    <option value="Grijs">Grijs</option>
+                    <option value="Overig">Overig</option>
+                </select>
+            </div>
+            
+            <div id="admin-telling-label" style="margin-left: auto; font-size: 0.85em; font-weight: bold; color: #495057; padding-top: 15px;">
+                Resultaten: ...
+            </div>
+        </div>
+
         <ul id="schilderijen-lijst"><li>Laden... ⏳</li></ul>
     </div>
 
@@ -268,6 +340,14 @@
             const statusMelding = document.getElementById('status-melding');
             const loginError = document.getElementById('login-error');
             let huidigBewerkId = null;
+
+            // NIEUW: Global array en actieve filter states voor admin panel
+            let alleAdminSchilderijen = [];
+            let filterBeheerder = 'Alles';
+            let filterFormaat = 'Alles';
+            let filterType = 'Alles';
+            let filterSfeer = 'Alles';
+            let filterKleurtint = 'Alles';
 
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -391,85 +471,116 @@
                 }
             });
 
+            // Slaat de database snapshot op in een master array
             async function laadSchilderijenLijst() {
                 const lijst = document.getElementById('schilderijen-lijst');
                 try {
                     const querySnapshot = await db.collection("schilderijen").get();
-                    lijst.innerHTML = '';
+                    alleAdminSchilderijen = [];
                     
-                    if (querySnapshot.empty) {
-                        lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
-                        return;
-                    }
-
-                    let schilderijenArray = [];
                     querySnapshot.forEach((doc) => {
-                        schilderijenArray.push({ id: doc.id, ...doc.data() });
+                        alleAdminSchilderijen.push({ id: doc.id, ...doc.data() });
                     });
 
-                    schilderijenArray.sort((a, b) => {
+                    alleAdminSchilderijen.sort((a, b) => {
                         return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
                     });
                     
-                    schilderijenArray.forEach((data) => {
-                        const li = document.createElement('li');
-                        
-                        const s = data.status || "beschikbaar";
-                        if (s === 'gereserveerd') li.className = 'status-gereserveerd';
-                        if (s === 'niet-beschikbaar') li.className = 'status-niet-beschikbaar';
-                        
-                        let statusWeergave = s.charAt(0).toUpperCase() + s.slice(1);
-                        let statusKleur = "#17a2b8";
-                        if (s === 'niet-beschikbaar') {
-                            statusWeergave = 'Niet meer beschikbaar';
-                            statusKleur = '#6c757d';
-                        } else if (s === 'gereserveerd') {
-                            statusKleur = '#ffc107';
-                        } else if (s === 'beschikbaar') {
-                            statusKleur = '#28a745';
-                        }
-                        
-                        const f = data.formaat || "Onbekend";
-                        const t = data.type || "Onbekend";
-                        const sf = data.sfeer || "Overig";
-                        const kt = data.kleurtint || "Overig";
-                        const b = data.beheerder || "Onbekend";
-                        const l = data.lijst ? String(data.lijst) : "Onbekend";
-                        
-                        let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Locatie:</strong> ${b}<br><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
-                        
-                        if (s === 'gereserveerd') {
-                            infoHtml += `<div class="koper-info">👤 <strong>Geclaimd door:</strong><br>${data.koper_naam} (${data.koper_email})<br><em>"${data.koper_bericht || 'Geen bericht'}"</em></div>`;
-                            
-                            if (data.reservelijst && data.reservelijst.length > 0) {
-                                data.reservelijst.forEach((res, index) => {
-                                    infoHtml += `<div class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</div>`;
-                                });
-                            }
-                        }
-
-                        const veiligeLijst = l.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                        const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                        const veiligeSfeer = sf.replace(/'/g, "\\'");
-                        const veiligeBeheerder = b.replace(/'/g, "\\'");
-
-                        li.innerHTML = `
-                            <img src="${data.afbeelding_url}" alt="${data.titel}" class="admin-kaart-afbeelding" loading="lazy">
-                            <div class="admin-kaart-content">
-                                <div style="margin-bottom: 10px;">${infoHtml}</div>
-                                <div class="actie-knoppen">
-                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}', '${veiligeBeheerder}')">Kenmerken Bewerken</button>
-                                    ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer Reservering</button>` : ''}
-                                    <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">Schilderij Verwijderen</button>
-                                </div>
-                            </div>
-                        `;
-                        lijst.appendChild(li);
-                    });
+                    verwerkEnToonAdminSchilderijen();
 
                 } catch (error) {
                     lijst.innerHTML = `<li style="color: red; font-weight: bold;">Fout bij laden database: ${error.message}</li>`;
                 }
+            }
+
+            // NIEUW: Filtert lokaal de array en bouwt het grid visueel op
+            function verwerkEnToonAdminSchilderijen() {
+                const lijst = document.getElementById('schilderijen-lijst');
+                lijst.innerHTML = '';
+
+                if (alleAdminSchilderijen.length === 0) {
+                    lijst.innerHTML = '<li>Nog geen schilderijen gevonden in de database.</li>';
+                    return;
+                }
+
+                const gefilterdeLijst = alleAdminSchilderijen.filter(data => {
+                    const b = data.beheerder || "Onbekend";
+                    const f = data.formaat || "Onbekend";
+                    const t = data.type || "Onbekend";
+                    const sf = data.sfeer || "Overig";
+                    const kt = data.kleurtint || "Overig";
+
+                    let matchBeheerder = (filterBeheerder === 'Alles' || b === filterBeheerder);
+                    let matchFormaat = (filterFormaat === 'Alles' || f === filterFormaat);
+                    let matchType = (filterType === 'Alles' || t === filterType);
+                    let matchSfeer = (filterSfeer === 'Alles' || sf === filterSfeer);
+                    let matchKleurtint = (filterKleurtint === 'Alles' || kt === filterKleurtint);
+
+                    return matchBeheerder && matchFormaat && matchType && matchSfeer && matchKleurtint;
+                });
+
+                document.getElementById('admin-telling-label').innerText = `Resultaten: ${gefilterdeLijst.length} van de ${alleAdminSchilderijen.length}`;
+
+                if (gefilterdeLijst.length === 0) {
+                    lijst.innerHTML = '<li style="grid-column: 1/-1; text-align: center; padding: 30px; color: #666;">Geen schilderijen gevonden met deze filtercombinatie.</li>';
+                    return;
+                }
+                
+                gefilterdeLijst.forEach((data) => {
+                    const li = document.createElement('li');
+                    
+                    const s = data.status || "beschikbaar";
+                    if (s === 'gereserveerd') li.className = 'status-gereserveerd';
+                    if (s === 'niet-beschikbaar') li.className = 'status-niet-beschikbaar';
+                    
+                    let statusWeergave = s.charAt(0).toUpperCase() + s.slice(1);
+                    let statusKleur = "#17a2b8";
+                    if (s === 'niet-beschikbaar') {
+                        statusWeergave = 'Niet meer beschikbaar';
+                        statusKleur = '#6c757d';
+                    } else if (s === 'gereserveerd') {
+                        statusKleur = '#ffc107';
+                    } else if (s === 'beschikbaar') {
+                        statusKleur = '#28a745';
+                    }
+                    
+                    const f = data.formaat || "Onbekend";
+                    const t = data.type || "Onbekend";
+                    const sf = data.sfeer || "Overig";
+                    const kt = data.kleurtint || "Overig";
+                    const b = data.beheerder || "Onbekend";
+                    const l = data.lijst ? String(data.lijst) : "Onbekend";
+                    
+                    let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Locatie:</strong> ${b}<br><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
+                    
+                    if (s === 'gereserveerd') {
+                        infoHtml += `<div class="koper-info">👤 <strong>Geclaimd door:</strong><br>${data.koper_naam} (${data.koper_email})<br><em>"${data.koper_bericht || 'Geen bericht'}"</em></div>`;
+                        
+                        if (data.reservelijst && data.reservelijst.length > 0) {
+                            data.reservelijst.forEach((res, index) => {
+                                infoHtml += `<div class="reserve-info">⏳ Reserve #${index + 1}: ${res.naam} (${res.email})</div>`;
+                            });
+                        }
+                    }
+
+                    const veiligeLijst = l.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const veiligeSfeer = sf.replace(/'/g, "\\'");
+                    const veiligeBeheerder = b.replace(/'/g, "\\'");
+
+                    li.innerHTML = `
+                        <img src="${data.afbeelding_url}" alt="${data.titel}" class="admin-kaart-afbeelding" loading="lazy">
+                        <div class="admin-kaart-content">
+                            <div style="margin-bottom: 10px;">${infoHtml}</div>
+                            <div class="actie-knoppen">
+                                <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}', '${veiligeBeheerder}')">Kenmerken Bewerken</button>
+                                ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer Reservering</button>` : ''}
+                                <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">Schilderij Verwijderen</button>
+                            </div>
+                        </div>
+                    `;
+                    lijst.appendChild(li);
+                });
             }
 
             window.openEditModal = function(id, f, t, l, s, sf, kt, b) {
@@ -588,6 +699,28 @@
                     laadSchilderijenLijst(); 
                 }
             };
+
+            // NIEUW: Event Listeners voor de admin filter dropdowns
+            document.getElementById('admin-filter-beheerder').addEventListener('change', (e) => {
+                filterBeheerder = e.target.value;
+                verwerkEnToonAdminSchilderijen();
+            });
+            document.getElementById('admin-filter-formaat').addEventListener('change', (e) => {
+                filterFormaat = e.target.value;
+                verwerkEnToonAdminSchilderijen();
+            });
+            document.getElementById('admin-filter-type').addEventListener('change', (e) => {
+                filterType = e.target.value;
+                verwerkEnToonAdminSchilderijen();
+            });
+            document.getElementById('admin-filter-sfeer').addEventListener('change', (e) => {
+                filterSfeer = e.target.value;
+                verwerkEnToonAdminSchilderijen();
+            });
+            document.getElementById('admin-filter-kleurtint').addEventListener('change', (e) => {
+                filterKleurtint = e.target.value;
+                verwerkEnToonAdminSchilderijen();
+            });
             
         } catch (error) {
             document.getElementById('login-error').innerText = "Systeemfout bij laden: " + error.message;
