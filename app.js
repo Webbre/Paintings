@@ -113,7 +113,6 @@ function verwerkEnToonSchilderijen() {
         const sfeerTekst = data.sfeer || "Overig";
         const kleurtintTekst = data.kleurtint || "Overig";
 
-        // HIER IS HET OPGELEST: Sfeer en Kleurtint staan nu ook op het overzichtskaartje!
         let inhoud = `
             <img src="${data.afbeelding_url}" alt="${data.titel}" loading="lazy" style="transition: opacity 0.5s ease-in-out; background-color: #f0f0f0;">
             <h3>${data.titel}</h3>
@@ -158,7 +157,7 @@ function verwerkEnToonSchilderijen() {
                         bevestigKnop.innerText = "Plaats op reservelijst";
                         invulVelden.style.display = 'flex';
                     } else {
-                        formulierTitel.innerText = "Dit schilderij is gereserveerd en de reservelijst zit momenteel vol.";
+                        formulierTitel.innerText = "Dit schilderij is gereserveerd and de reservelijst zit momenteel vol.";
                         invulVelden.style.display = 'none';
                     }
                 }
@@ -172,39 +171,88 @@ function verwerkEnToonSchilderijen() {
         galerijContainer.appendChild(kaart);
     });
 
+    // --- GEHEEL VERNIEUWDE EN GEAVANCEERDE NUMERIEKE PAGINATIE ---
     if (totaalPaginas > 1) {
         const paginatieDiv = document.createElement('div');
-        paginatieDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px auto; width: 100%; clear: both; font-family: sans-serif;';
+        paginatieDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 8px; margin: 40px auto; width: 100%; clear: both; font-family: system-ui, sans-serif; flex-wrap: wrap;';
         
+        // 1. De Vorige Knop
         const knopVorige = document.createElement('button');
-        knopVorige.innerText = '← Vorige';
+        knopVorige.innerText = '←';
         knopVorige.disabled = huidigePagina === 1;
-        knopVorige.style.cssText = 'padding: 8px 16px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;';
-        if (huidigePagina === 1) knopVorige.style.opacity = '0.4';
-        knopVorige.onclick = () => {
-            huidigePagina--;
-            verwerkEnToonSchilderijen();
-            window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
-        };
-
-        const indicator = document.createElement('span');
-        indicator.innerText = `Pagina ${huidigePagina} van ${totaalPaginas} (${totaalItems} items)`;
-        indicator.style.cssText = 'color: #495057; font-size: 0.9em; font-weight: bold;';
-
-        const knopVolgende = document.createElement('button');
-        knopVolgende.innerText = 'Volgende →';
-        knopVolgende.disabled = huidigePagina === totaalPaginas;
-        knopVolgende.style.cssText = 'padding: 8px 16px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;';
-        if (huidigePagina === totaalPaginas) knopVolgende.style.opacity = '0.4';
-        knopVolgende.onclick = () => {
-            huidigePagina++;
-            verwerkEnToonSchilderijen();
-            window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
-        };
-
+        knopVorige.style.cssText = 'padding: 8px 14px; background-color: #f1f3f5; color: #333; border: 1px solid #ced4da; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s;';
+        if (huidigePagina === 1) {
+            knopVorige.style.opacity = '0.4';
+            knopVorige.style.cursor = 'not-allowed';
+        } else {
+            knopVorige.onmouseover = () => knopVorige.style.backgroundColor = '#e9ecef';
+            knopVorige.onmouseout = () => knopVorige.style.backgroundColor = '#f1f3f5';
+            knopVorige.onclick = () => {
+                huidigePagina--;
+                verwerkEnToonSchilderijen();
+                window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
+            };
+        }
         paginatieDiv.appendChild(knopVorige);
-        paginatieDiv.appendChild(indicator);
+
+        // 2. Loop door alle pagina's heen en maak cijferknopjes aan
+        for (let i = 1; i <= totaalPaginas; i++) {
+            const cijferKnop = document.createElement('button');
+            cijferKnop.innerText = i;
+            
+            // Basis styling voor de cijferknopjes
+            let knopStyle = 'padding: 8px 14px; border: 1px solid #ced4da; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.95em; transition: all 0.2s;';
+            
+            if (i === huidigePagina) {
+                // Styling voor de actieve pagina waar je nu op staat
+                knopStyle += ' background-color: #343a40; color: white; border-color: #343a40; cursor: default;';
+                cijferKnop.style.cssText = knopStyle;
+            } else {
+                // Styling voor alle overige (klikbare) pagina's
+                knopStyle += ' background-color: white; color: #495057;';
+                cijferKnop.style.cssText = knopStyle;
+                cijferKnop.onmouseover = () => {
+                    cijferKnop.style.backgroundColor = '#f8f9fa';
+                    cijferKnop.style.borderColor = '#b6b9bb';
+                };
+                cijferKnop.onmouseout = () => {
+                    cijferKnop.style.backgroundColor = 'white';
+                    cijferKnop.style.borderColor = '#ced4da';
+                };
+                cijferKnop.onclick = () => {
+                    huidigePagina = i;
+                    verwerkEnToonSchilderijen();
+                    window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
+                };
+            }
+            paginatieDiv.appendChild(cijferKnop);
+        }
+
+        // 3. De Volgende Knop
+        const knopVolgende = document.createElement('button');
+        knopVolgende.innerText = '→';
+        knopVolgende.disabled = huidigePagina === totaalPaginas;
+        knopVolgende.style.cssText = 'padding: 8px 14px; background-color: #f1f3f5; color: #333; border: 1px solid #ced4da; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s;';
+        if (huidigePagina === totaalPaginas) {
+            knopVolgende.style.opacity = '0.4';
+            knopVolgende.style.cursor = 'not-allowed';
+        } else {
+            knopVolgende.onmouseover = () => knopVolgende.style.backgroundColor = '#e9ecef';
+            knopVolgende.onmouseout = () => knopVolgende.style.backgroundColor = '#f1f3f5';
+            knopVolgende.onclick = () => {
+                huidigePagina++;
+                verwerkEnToonSchilderijen();
+                window.scrollTo({ top: galerijContainer.offsetTop - 120, behavior: 'smooth' });
+            };
+        }
         paginatieDiv.appendChild(knopVolgende);
+
+        // 4. Toon subtiel het totaal aantal resultaten onder of naast de knoppen
+        const resultatenLabel = document.createElement('div');
+        resultatenLabel.style.cssText = 'width: 100%; text-align: center; margin-top: 10px; color: #6c757d; font-size: 0.85em; font-weight: 500;';
+        resultatenLabel.innerText = `Totaal: ${totaalItems} schilderijen verdeeld over ${totaalPaginas} pagina's`;
+        paginatieDiv.appendChild(resultatenLabel);
+
         galerijContainer.appendChild(paginatieDiv);
     }
 }
