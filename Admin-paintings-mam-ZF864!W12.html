@@ -152,6 +152,14 @@
                     <option value="Overig" selected>Overig</option>
                 </select>
 
+                <label>Huidige locatie (in bezit van):</label>
+                <select id="beheerder" required>
+                    <option value="Onbekend">Nog niet verdeeld / Onbekend</option>
+                    <option value="Ewout">Ewout</option>
+                    <option value="Arjen">Arjen</option>
+                    <option value="Michiel">Michiel</option>
+                </select>
+
                 <label>Lijst (Vrij invullen):</label>
                 <input type="text" id="lijst" placeholder="Bijv. Eikenhouten lijst, geen lijst, etc." required>
             </div>
@@ -216,6 +224,13 @@
                 <option value="Wit">Wit</option>
                 <option value="Grijs">Grijs</option>
                 <option value="Overig">Overig</option>
+            </select>
+            <label>Huidige locatie (in bezit van):</label>
+            <select id="edit-beheerder">
+                <option value="Onbekend">Nog niet verdeeld / Onbekend</option>
+                <option value="Ewout">Ewout</option>
+                <option value="Arjen">Arjen</option>
+                <option value="Michiel">Michiel</option>
             </select>
             <label>Lijst (Vrij invullen):</label>
             <input type="text" id="edit-lijst" placeholder="Bijv. Eikenhouten lijst">
@@ -289,7 +304,6 @@
                 const bestanden = document.getElementById('foto').files;
                 if (bestanden.length === 0) return;
 
-                // --- NIEUW: FILE SIZE CHECK ---
                 const MAX_KB = 400;
                 const MAX_BYTES = MAX_KB * 1024;
                 let teGrootLijst = [];
@@ -312,9 +326,8 @@
                     foutMelding += `</ul><em>Actie vereist: Maak deze foto's eerst kleiner (via bijv. TinyPNG) en selecteer daarna de hele reeks opnieuw.</em></div>`;
                     
                     statusMelding.innerHTML = foutMelding;
-                    return; // Stop het proces hier!
+                    return; 
                 }
-                // --- EINDE FILE SIZE CHECK ---
 
                 document.getElementById('upload-knop').disabled = true;
                 statusMelding.innerText = "Bezig met scannen van huidige nummers... ⏳";
@@ -358,6 +371,7 @@
                             type: document.getElementById('type').value,
                             sfeer: document.getElementById('sfeer').value,
                             kleurtint: document.getElementById('kleurtint').value,
+                            beheerder: document.getElementById('beheerder').value,
                             lijst: document.getElementById('lijst').value,
                             reservelijst: []
                         });
@@ -419,9 +433,10 @@
                         const t = data.type || "Onbekend";
                         const sf = data.sfeer || "Overig";
                         const kt = data.kleurtint || "Overig";
+                        const b = data.beheerder || "Onbekend";
                         const l = data.lijst ? String(data.lijst) : "Onbekend";
                         
-                        let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
+                        let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Locatie:</strong> ${b}<br><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
                         
                         if (s === 'gereserveerd') {
                             infoHtml += `<div class="koper-info">👤 <strong>Geclaimd door:</strong><br>${data.koper_naam} (${data.koper_email})<br><em>"${data.koper_bericht || 'Geen bericht'}"</em></div>`;
@@ -436,13 +451,14 @@
                         const veiligeLijst = l.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         const veiligeKleurtint = kt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         const veiligeSfeer = sf.replace(/'/g, "\\'");
+                        const veiligeBeheerder = b.replace(/'/g, "\\'");
 
                         li.innerHTML = `
                             <img src="${data.afbeelding_url}" alt="${data.titel}" class="admin-kaart-afbeelding" loading="lazy">
                             <div class="admin-kaart-content">
                                 <div style="margin-bottom: 10px;">${infoHtml}</div>
                                 <div class="actie-knoppen">
-                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}')">Kenmerken Bewerken</button>
+                                    <button class="bewerk-knop" onclick="openEditModal('${data.id}', '${f}', '${t}', '${veiligeLijst}', '${s}', '${veiligeSfeer}', '${veiligeKleurtint}', '${veiligeBeheerder}')">Kenmerken Bewerken</button>
                                     ${s === 'gereserveerd' ? `<button class="beschikbaar-knop" onclick="maakBeschikbaar('${data.id}')">Annuleer Reservering</button>` : ''}
                                     <button class="verwijder-knop" onclick="verwijderSchilderij('${data.id}')">Schilderij Verwijderen</button>
                                 </div>
@@ -456,13 +472,14 @@
                 }
             }
 
-            window.openEditModal = function(id, f, t, l, s, sf, kt) {
+            window.openEditModal = function(id, f, t, l, s, sf, kt, b) {
                 huidigBewerkId = id;
                 document.getElementById('edit-formaat').value = (f !== 'Onbekend') ? f : 'Groot';
                 document.getElementById('edit-type').value = (t !== 'Onbekend') ? t : 'Doek';
                 document.getElementById('edit-sfeer').value = (sf !== 'Onbekend') ? sf : 'Overig';
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
                 document.getElementById('edit-status').value = s;
+                document.getElementById('edit-beheerder').value = (b !== 'Onbekend') ? b : 'Onbekend';
                 document.getElementById('edit-foto').value = ''; 
                 
                 const selectElement = document.getElementById('edit-kleurtint');
@@ -484,16 +501,14 @@
             window.slaBewerkingOp = async function() {
                 if(!huidigBewerkId) return;
                 
-                // --- NIEUW: FILE SIZE CHECK BEWERKEN ---
                 const fotoInput = document.getElementById('edit-foto');
                 if (fotoInput.files.length > 0) {
                     const file = fotoInput.files[0];
                     if (file.size > 400 * 1024) {
                         alert(`❌ Oeps! De nieuwe foto (${file.name}) is te groot (${Math.round(file.size / 1024)} KB).\n\nMaximaal 400 KB toegestaan. Maak de foto eerst kleiner (via bijv. TinyPNG) en probeer het opnieuw.`);
-                        return; // Blokkeer opslaan
+                        return; 
                     }
                 }
-                // --- EINDE FILE SIZE CHECK ---
 
                 const knop = document.getElementById('opslaan-bewerk-knop');
                 const origineleTekst = knop.innerText;
@@ -506,6 +521,7 @@
                         type: document.getElementById('edit-type').value,
                         sfeer: document.getElementById('edit-sfeer').value,
                         kleurtint: document.getElementById('edit-kleurtint').value,
+                        beheerder: document.getElementById('edit-beheerder').value,
                         lijst: document.getElementById('edit-lijst').value,
                         status: document.getElementById('edit-status').value
                     };
