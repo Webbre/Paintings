@@ -174,6 +174,18 @@
         <h2>Huidige schilderijen (Beheer)</h2>
 
         <div class="admin-filters-balk" style="display: flex; gap: 12px; align-items: center; margin-bottom: 25px; padding: 15px; background-color: #e9ecef; border-radius: 6px; flex-wrap: wrap;">
+            
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="admin-filter-status" style="font-size: 0.8em; color: #495057; margin: 0;">Status:</label>
+                <select id="admin-filter-status" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
+                    <option value="Alles">Alle statussen</option>
+                    <option value="beschikbaar">Beschikbaar</option>
+                    <option value="gereserveerd">Gereserveerd (Iedereen)</option>
+                    <option value="gereserveerd_extern">Gereserveerd (Externe kopers)</option>
+                    <option value="niet-beschikbaar">Niet meer beschikbaar</option>
+                </select>
+            </div>
+
             <div style="display: flex; flex-direction: column; gap: 4px;">
                 <label for="admin-filter-beheerder" style="font-size: 0.8em; color: #495057; margin: 0;">Locatie:</label>
                 <select id="admin-filter-beheerder" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
@@ -348,6 +360,7 @@
             let huidigBewerkId = null;
 
             let alleAdminSchilderijen = [];
+            let filterStatus = 'Alles';
             let filterBeheerder = 'Alles';
             let filterFormaat = 'Alles';
             let filterType = 'Alles';
@@ -507,11 +520,23 @@
                 }
 
                 const gefilterdeLijst = alleAdminSchilderijen.filter(data => {
+                    const s = data.status || "beschikbaar";
                     const b = data.beheerder || "Onbekend";
                     const f = data.formaat || "Onbekend";
                     const t = data.type || "Onbekend";
                     const sf = data.sfeer || "Overig";
                     const kt = data.kleurtint || "Overig";
+                    const koperEmail = (data.koper_email || "").toLowerCase().trim();
+                    
+                    const uitgeslotenEmails = ["emweeber@gmail.com", "arweeber@gmail.com", "m.w.weeber@gmail.com"];
+
+                    // Uitgebreide status filter logica (inclusief uitsluiten van jullie 3 e-mailadressen)
+                    let matchStatus = false;
+                    if (filterStatus === 'Alles') matchStatus = true;
+                    else if (filterStatus === 'beschikbaar' && s === 'beschikbaar') matchStatus = true;
+                    else if (filterStatus === 'gereserveerd' && s === 'gereserveerd') matchStatus = true;
+                    else if (filterStatus === 'gereserveerd_extern' && s === 'gereserveerd' && !uitgeslotenEmails.includes(koperEmail)) matchStatus = true;
+                    else if (filterStatus === 'niet-beschikbaar' && s === 'niet-beschikbaar') matchStatus = true;
 
                     let matchBeheerder = (filterBeheerder === 'Alles' || b === filterBeheerder);
                     let matchFormaat = (filterFormaat === 'Alles' || f === filterFormaat);
@@ -519,7 +544,7 @@
                     let matchSfeer = (filterSfeer === 'Alles' || sf === filterSfeer);
                     let matchKleurtint = (filterKleurtint === 'Alles' || kt === filterKleurtint);
 
-                    return matchBeheerder && matchFormaat && matchType && matchSfeer && matchKleurtint;
+                    return matchStatus && matchBeheerder && matchFormaat && matchType && matchSfeer && matchKleurtint;
                 });
 
                 document.getElementById('admin-telling-label').innerText = `Resultaten: ${gefilterdeLijst.length} van de ${alleAdminSchilderijen.length}`;
@@ -547,6 +572,28 @@
                         statusKleur = '#28a745';
                     }
                     
+                    // Berekening of reservering max 3 dagen oud is (Nieuw-label logic)
+                    let nieuwBadgeHtml = '';
+                    if (s === 'gereserveerd' && data.gereserveerd_datum) {
+                        try {
+                            let resDatum;
+                            if (typeof data.gereserveerd_datum.toDate === 'function') {
+                                resDatum = data.gereserveerd_datum.toDate();
+                            } else {
+                                resDatum = new Date(data.gereserveerd_datum);
+                            }
+                            const nu = new Date();
+                            const verschilInMs = nu - resDatum;
+                            const verschilInDagen = verschilInMs / (1000 * 60 * 60 * 24);
+                            
+                            if (verschilInDagen <= 3 && verschilInDagen >= 0) {
+                                nieuwBadgeHtml = `<span style="background:#dc3545; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; font-weight:bold; vertical-align: middle;">NIEUW</span>`;
+                            }
+                        } catch (e) {
+                            console.error("Fout bij datumberekening:", e);
+                        }
+                    }
+                    
                     const f = data.formaat || "Onbekend";
                     const t = data.type || "Onbekend";
                     const sf = data.sfeer || "Overig";
@@ -554,7 +601,7 @@
                     const b = data.beheerder || "Onbekend";
                     const l = data.lijst ? String(data.lijst) : "Onbekend";
                     
-                    let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span><br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Locatie:</strong> ${b}<br><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
+                    let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span>${nieuwBadgeHtml}<br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Locatie:</strong> ${b}<br><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
                     
                     if (s === 'gereserveerd') {
                         infoHtml += `<div class="koper-info">👤 <strong>Geclaimd door:</strong><br>${data.koper_naam} (${data.koper_email})<br><em>"${data.koper_bericht || 'Geen bericht'}"</em></div>`;
@@ -630,6 +677,10 @@
                 knop.disabled = true;
 
                 try {
+                    const oudeData = alleAdminSchilderijen.find(x => x.id === huidigBewerkId);
+                    const oudeStatus = oudeData ? oudeData.status : 'beschikbaar';
+                    const nieuweStatus = document.getElementById('edit-status').value;
+
                     let updateData = {
                         formaat: document.getElementById('edit-formaat').value,
                         type: document.getElementById('edit-type').value,
@@ -637,8 +688,15 @@
                         kleurtint: document.getElementById('edit-kleurtint').value,
                         beheerder: document.getElementById('edit-beheerder').value,
                         lijst: document.getElementById('edit-lijst').value,
-                        status: document.getElementById('edit-status').value
+                        status: nieuweStatus
                     };
+
+                    // Datumstempel logica toevoegen bij status wijzigingen in admin
+                    if (nieuweStatus === 'gereserveerd' && oudeStatus !== 'gereserveerd') {
+                        updateData.gereserveerd_datum = firebase.firestore.FieldValue.serverTimestamp();
+                    } else if (nieuweStatus !== 'gereserveerd') {
+                        updateData.gereserveerd_datum = firebase.firestore.FieldValue.delete();
+                    }
 
                     if (fotoInput.files.length > 0) {
                         const file = fotoInput.files[0];
@@ -690,6 +748,7 @@
                         koper_naam: firebase.firestore.FieldValue.delete(),
                         koper_email: firebase.firestore.FieldValue.delete(),
                         koper_bericht: firebase.firestore.FieldValue.delete(),
+                        gereserveerd_datum: firebase.firestore.FieldValue.delete(),
                         reservelijst: []
                     });
                     laadSchilderijenLijst();
@@ -703,6 +762,11 @@
                 }
             };
 
+            // Event Listeners voor admin filters (inclusief Status filter)
+            document.getElementById('admin-filter-status').addEventListener('change', (e) => {
+                filterStatus = e.target.value;
+                verwerkEnToonAdminSchilderijen();
+            });
             document.getElementById('admin-filter-beheerder').addEventListener('change', (e) => {
                 filterBeheerder = e.target.value;
                 verwerkEnToonAdminSchilderijen();
