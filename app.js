@@ -313,6 +313,7 @@ bevestigKnop.addEventListener('click', async () => {
                 koper_naam: naam,
                 koper_email: email,
                 koper_bericht: bericht,
+                gereserveerd_datum: firebase.firestore.FieldValue.serverTimestamp(),
                 reservelijst: [] 
             });
             alert("Bedankt voor je interesse! Het schilderij is voor je gereserveerd. Er wordt z.s.m. contact opgenomen.");
