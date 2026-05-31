@@ -392,7 +392,7 @@
                     loginError.innerText = "";
                 } catch (error) {
                     console.error(error);
-                    loginError.innerText = "❌ Inloggen mislukt. Controleer e-mail en wachtwoord.";
+                    loginError.innerText = "❌ Inloggen mislukt. Controleer e-mail and wachtwoord.";
                 }
             });
 
@@ -502,7 +502,28 @@
                         alleAdminSchilderijen.push({ id: doc.id, ...doc.data() });
                     });
 
+                    // NIEUWE EN GEAVANCEERDE SORTEERLOGICA
                     alleAdminSchilderijen.sort((a, b) => {
+                        const getTime = (item) => {
+                            if ((item.status || "beschikbaar") === 'gereserveerd' && item.gereserveerd_datum) {
+                                try {
+                                    return typeof item.gereserveerd_datum.toDate === 'function' 
+                                        ? item.gereserveerd_datum.toDate().getTime() 
+                                        : new Date(item.gereserveerd_datum).getTime();
+                                } catch(e) { return 0; }
+                            }
+                            return 0;
+                        };
+
+                        const timeA = getTime(a);
+                        const timeB = getTime(b);
+
+                        // Als de reserveringstijden ongelijk zijn, zet de nieuwste bovenaan
+                        if (timeA !== timeB) {
+                            return timeB - timeA; 
+                        }
+
+                        // Fallback: Als beide niet gereserveerd zijn, sorteer ze op nummer
                         return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
                     });
                     
@@ -533,7 +554,6 @@
                     
                     const uitgeslotenEmails = ["emweeber@gmail.com", "arweeber@gmail.com", "m.w.weeber@gmail.com"];
 
-                    // Uitgebreide status filter logica (inclusief uitsluiten van jullie 3 e-mailadressen)
                     let matchStatus = false;
                     if (filterStatus === 'Alles') matchStatus = true;
                     else if (filterStatus === 'beschikbaar' && s === 'beschikbaar') matchStatus = true;
@@ -575,7 +595,6 @@
                         statusKleur = '#28a745';
                     }
                     
-                    // Berekening of reservering max 3 dagen oud is (Nieuw-label logic)
                     let nieuwBadgeHtml = '';
                     if (s === 'gereserveerd' && data.gereserveerd_datum) {
                         try {
@@ -694,7 +713,6 @@
                         status: nieuweStatus
                     };
 
-                    // Datumstempel logica toevoegen bij status wijzigingen in admin
                     if (nieuweStatus === 'gereserveerd' && oudeStatus !== 'gereserveerd') {
                         updateData.gereserveerd_datum = firebase.firestore.FieldValue.serverTimestamp();
                     } else if (nieuweStatus !== 'gereserveerd') {
@@ -765,7 +783,6 @@
                 }
             };
 
-            // Event Listeners voor admin filters (inclusief Status filter)
             document.getElementById('admin-filter-status').addEventListener('change', (e) => {
                 filterStatus = e.target.value;
                 verwerkEnToonAdminSchilderijen();
