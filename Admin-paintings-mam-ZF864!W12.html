@@ -78,7 +78,7 @@
         
         .login-logo { display: block; margin: 0 auto 25px auto; max-width: 180px; height: auto; }
         
-        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        #edit-modal, #emails-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90%; overflow-y: auto; }
         
         #admin-paneel { display: none; }
@@ -174,6 +174,7 @@
         
         <h2>Huidige schilderijen (Beheer)</h2>
 
+        <!-- Filterbalk voor Beheerders inclusief NIEUWE E-mail knop -->
         <div class="admin-filters-balk" style="display: flex; gap: 12px; align-items: center; margin-bottom: 25px; padding: 15px; background-color: #e9ecef; border-radius: 6px; flex-wrap: wrap;">
             
             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -257,9 +258,28 @@
             <div id="admin-telling-label" style="margin-left: auto; font-size: 0.85em; font-weight: bold; color: #495057; padding-top: 15px;">
                 Resultaten: ...
             </div>
+
+            <!-- Nieuwe knop voor e-mail adressen -->
+            <button type="button" onclick="openEmailsModal()" style="background-color: #17a2b8; width: 100%; margin-top: 10px;">Bekijk e-mailadressen kopers</button>
         </div>
 
         <ul id="schilderijen-lijst"><li>Laden... ⏳</li></ul>
+    </div>
+
+    <!-- NIEUW: Modal voor E-mail overzicht -->
+    <div id="emails-modal">
+        <div class="modal-content" style="width: 500px;">
+            <h3 style="margin-top:0;">E-mailadressen externe kopers</h3>
+            <p style="font-size: 0.9em; color: #555;">Hieronder staan de reserveringen gesorteerd op datum (nieuwste bovenaan). Met de knop kopieer je direct alle unieke e-mailadressen voor in de BCC van je mailprogramma.</p>
+            
+            <button onclick="kopieerEmailsVoorBCC()" style="background-color: #28a745; width: 100%; margin-bottom: 15px; font-weight:bold;">Kopieer adressen voor BCC</button>
+            
+            <div id="emails-lijst-container" style="max-height: 300px; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px; margin-bottom: 20px; font-size: 0.9em;">
+                <!-- De lijst wordt hier via JavaScript ingeladen -->
+            </div>
+
+            <button onclick="sluitEmailsModal()" style="background-color: #6c757d; width: 100%;">Sluit venster</button>
+        </div>
     </div>
 
     <div id="edit-modal">
@@ -502,7 +522,6 @@
                         alleAdminSchilderijen.push({ id: doc.id, ...doc.data() });
                     });
 
-                    // NIEUWE EN GEAVANCEERDE SORTEERLOGICA
                     alleAdminSchilderijen.sort((a, b) => {
                         const getTime = (item) => {
                             if ((item.status || "beschikbaar") === 'gereserveerd' && item.gereserveerd_datum) {
@@ -518,12 +537,10 @@
                         const timeA = getTime(a);
                         const timeB = getTime(b);
 
-                        // Als de reserveringstijden ongelijk zijn, zet de nieuwste bovenaan
                         if (timeA !== timeB) {
                             return timeB - timeA; 
                         }
 
-                        // Fallback: Als beide niet gereserveerd zijn, sorteer ze op nummer
                         return (a.titel || "").localeCompare(b.titel || "", undefined, { numeric: true });
                     });
                     
@@ -781,6 +798,70 @@
                     await db.collection("schilderijen").doc(id).delete();
                     laadSchilderijenLijst(); 
                 }
+            };
+
+            // NIEUWE FUNCTIES VOOR HET E-MAIL OVERZICHT
+            window.openEmailsModal = function() {
+                const uitgeslotenEmails = ["emweeber@gmail.com", "arweeber@gmail.com", "m.w.weeber@gmail.com"];
+
+                let externeKopers = alleAdminSchilderijen.filter(data => {
+                    const s = data.status || "beschikbaar";
+                    const email = (data.koper_email || "").toLowerCase().trim();
+                    return s === 'gereserveerd' && email !== "" && !uitgeslotenEmails.includes(email);
+                });
+
+                externeKopers.sort((a, b) => {
+                    const timeA = a.gereserveerd_datum ? (typeof a.gereserveerd_datum.toDate === 'function' ? a.gereserveerd_datum.toDate().getTime() : new Date(a.gereserveerd_datum).getTime()) : 0;
+                    const timeB = b.gereserveerd_datum ? (typeof b.gereserveerd_datum.toDate === 'function' ? b.gereserveerd_datum.toDate().getTime() : new Date(b.gereserveerd_datum).getTime()) : 0;
+                    return timeB - timeA;
+                });
+
+                let htmlLijst = '<ul style="list-style:none; padding:0; margin:0;">';
+                let ruweEmails = [];
+
+                externeKopers.forEach(koper => {
+                    const email = koper.koper_email.toLowerCase().trim();
+                    if(!ruweEmails.includes(email)) {
+                        ruweEmails.push(email);
+                    }
+                    
+                    let datumTekst = "Datum onbekend";
+                    if(koper.gereserveerd_datum) {
+                        const d = typeof koper.gereserveerd_datum.toDate === 'function' ? koper.gereserveerd_datum.toDate() : new Date(koper.gereserveerd_datum);
+                        datumTekst = d.toLocaleDateString('nl-NL') + " " + d.toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'});
+                    }
+                    
+                    htmlLijst += `<li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                        <strong style="color:#495057;">${datumTekst}</strong><br>
+                        <span style="color:#0066cc;">${email}</span> <em style="font-size:0.9em; color:#6c757d;">(${koper.titel})</em>
+                    </li>`;
+                });
+                
+                htmlLijst += '</ul>';
+
+                if (externeKopers.length === 0) {
+                    htmlLijst = '<p style="color:#666;">Geen externe reserveringen gevonden.</p>';
+                }
+
+                document.getElementById('emails-lijst-container').innerHTML = htmlLijst;
+                window.emailsVoorBcc = ruweEmails.join('; ');
+                document.getElementById('emails-modal').style.display = 'flex';
+            };
+
+            window.sluitEmailsModal = function() {
+                document.getElementById('emails-modal').style.display = 'none';
+            };
+
+            window.kopieerEmailsVoorBCC = function() {
+                if(!window.emailsVoorBcc) {
+                    alert("Er zijn geen e-mailadressen om te kopiëren.");
+                    return;
+                }
+                navigator.clipboard.writeText(window.emailsVoorBcc).then(() => {
+                    alert("✅ E-mailadressen zijn succesvol gekopieerd! Je kunt ze nu direct plakken in het BCC veld van je mailprogramma.");
+                }).catch(err => {
+                    alert("Kopiëren mislukt. Controleer je browser instellingen.");
+                });
             };
 
             document.getElementById('admin-filter-status').addEventListener('change', (e) => {
