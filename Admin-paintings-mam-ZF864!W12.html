@@ -156,11 +156,9 @@
 
                 <label>Huidige locatie (in bezit van):</label>
                 <select id="beheerder" required>
-                    <option value="Onbekend">Nog niet verdeeld / Onbekend</option>
-                    <option value="Ewout">Ewout</option>
-                    <option value="Arjen">Arjen</option>
-                    <option value="Michiel">Michiel</option>
                     <option value="Vries">Vries</option>
+                    <option value="Ewout">Ewout</option>
+                    <option value="Michiel">Michiel</option>
                 </select>
 
                 <label>Lijst (Vrij invullen):</label>
@@ -174,7 +172,6 @@
         
         <h2>Huidige schilderijen (Beheer)</h2>
 
-        <!-- Filterbalk voor Beheerders inclusief NIEUWE E-mail knop -->
         <div class="admin-filters-balk" style="display: flex; gap: 12px; align-items: center; margin-bottom: 25px; padding: 15px; background-color: #e9ecef; border-radius: 6px; flex-wrap: wrap;">
             
             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -192,11 +189,9 @@
                 <label for="admin-filter-beheerder" style="font-size: 0.8em; color: #495057; margin: 0;">Locatie:</label>
                 <select id="admin-filter-beheerder" style="margin: 0; padding: 6px 10px; font-size: 0.85em; width: auto; background: white;">
                     <option value="Alles">Alle locaties</option>
-                    <option value="Onbekend">Nog niet verdeeld / Onbekend</option>
-                    <option value="Ewout">Ewout</option>
-                    <option value="Arjen">Arjen</option>
-                    <option value="Michiel">Michiel</option>
                     <option value="Vries">Vries</option>
+                    <option value="Ewout">Ewout</option>
+                    <option value="Michiel">Michiel</option>
                 </select>
             </div>
 
@@ -259,14 +254,12 @@
                 Resultaten: ...
             </div>
 
-            <!-- Nieuwe knop voor e-mail adressen -->
             <button type="button" onclick="openEmailsModal()" style="background-color: #17a2b8; width: 100%; margin-top: 10px;">Bekijk e-mailadressen kopers</button>
         </div>
 
         <ul id="schilderijen-lijst"><li>Laden... ⏳</li></ul>
     </div>
 
-    <!-- NIEUW: Modal voor E-mail overzicht -->
     <div id="emails-modal">
         <div class="modal-content" style="width: 500px;">
             <h3 style="margin-top:0;">E-mailadressen externe kopers</h3>
@@ -275,8 +268,7 @@
             <button onclick="kopieerEmailsVoorBCC()" style="background-color: #28a745; width: 100%; margin-bottom: 15px; font-weight:bold;">Kopieer adressen voor BCC</button>
             
             <div id="emails-lijst-container" style="max-height: 300px; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px; margin-bottom: 20px; font-size: 0.9em;">
-                <!-- De lijst wordt hier via JavaScript ingeladen -->
-            </div>
+                </div>
 
             <button onclick="sluitEmailsModal()" style="background-color: #6c757d; width: 100%;">Sluit venster</button>
         </div>
@@ -339,11 +331,9 @@
             </select>
             <label>Huidige locatie (in bezit van):</label>
             <select id="edit-beheerder">
-                <option value="Onbekend">Nog niet verdeeld / Onbekend</option>
-                <option value="Ewout">Ewout</option>
-                <option value="Arjen">Arjen</option>
-                <option value="Michiel">Michiel</option>
                 <option value="Vries">Vries</option>
+                <option value="Ewout">Ewout</option>
+                <option value="Michiel">Michiel</option>
             </select>
             <label>Lijst (Vrij invullen):</label>
             <input type="text" id="edit-lijst" placeholder="Bijv. Eikenhouten lijst">
@@ -562,7 +552,13 @@
 
                 const gefilterdeLijst = alleAdminSchilderijen.filter(data => {
                     const s = data.status || "beschikbaar";
-                    const b = data.beheerder || "Onbekend";
+                    
+                    // SLIMME TRUC: Oude "Onbekend" of "Nog niet verdeeld" data mappen we automatisch naar "Vries"
+                    let b = data.beheerder || "Vries";
+                    if (b === "Onbekend" || b === "Nog niet verdeeld / Onbekend") {
+                        b = "Vries";
+                    }
+
                     const f = data.formaat || "Onbekend";
                     const t = data.type || "Onbekend";
                     const sf = data.sfeer || "Overig";
@@ -637,7 +633,10 @@
                     const t = data.type || "Onbekend";
                     const sf = data.sfeer || "Overig";
                     const kt = data.kleurtint || "Overig";
-                    const b = data.beheerder || "Onbekend";
+                    
+                    let b = data.beheerder || "Vries";
+                    if (b === "Onbekend" || b === "Nog niet verdeeld / Onbekend") b = "Vries";
+
                     const l = data.lijst ? String(data.lijst) : "Onbekend";
                     
                     let infoHtml = `<strong style="font-size: 1.1em;">${data.titel}</strong> <span style="background:${statusKleur}; color:white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle;">${statusWeergave}</span>${nieuwBadgeHtml}<br><br><span style="font-size:0.9em; color:#444; line-height: 1.6;"><strong>Locatie:</strong> ${b}<br><strong>Formaat:</strong> ${f}<br><strong>Type:</strong> ${t}<br><strong>Sfeer:</strong> ${sf}<br><strong>Kleurtint:</strong> ${kt}<br><strong>Lijst:</strong> ${l}</span>`;
@@ -679,7 +678,7 @@
                 document.getElementById('edit-sfeer').value = (sf !== 'Onbekend') ? sf : 'Overig';
                 document.getElementById('edit-lijst').value = (l !== 'Onbekend') ? l : '';
                 document.getElementById('edit-status').value = s;
-                document.getElementById('edit-beheerder').value = (b !== 'Onbekend') ? b : 'Onbekend';
+                document.getElementById('edit-beheerder').value = b;
                 document.getElementById('edit-foto').value = ''; 
                 
                 const selectElement = document.getElementById('edit-kleurtint');
@@ -800,7 +799,6 @@
                 }
             };
 
-            // NIEUWE FUNCTIES VOOR HET E-MAIL OVERZICHT
             window.openEmailsModal = function() {
                 const uitgeslotenEmails = ["emweeber@gmail.com", "arweeber@gmail.com", "m.w.weeber@gmail.com"];
 
