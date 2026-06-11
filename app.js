@@ -273,7 +273,7 @@ const bericht = koperBerichtInput.value.trim(); // Dit is nu het connectie-veld
 
 // Aangepaste controle: bericht/connectie is nu ook verplicht!
 if (naam === '' || email === '' || bericht === '') {
-    alert('Vul alstublieft uw naam, e-mailadres en uw connectie met Dineke in.');
+    alert('Vul in je naam, je e-mailadres en hoe je deze website gevonden hebt.');
     return;
 }
 
