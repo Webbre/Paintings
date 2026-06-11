@@ -266,14 +266,16 @@ function verwerkEnToonSchilderijen() {
 }
 
 bevestigKnop.addEventListener('click', async () => {
-    const naam = koperNaamInput.value.trim();
-    const email = koperEmailInput.value.trim();
-    const bericht = koperBerichtInput.value.trim(); 
+// Zoek dit stukje op in app.js en vervang het (stond rond regel 160):
+const naam = koperNaamInput.value.trim();
+const email = koperEmailInput.value.trim();
+const bericht = koperBerichtInput.value.trim(); // Dit is nu het connectie-veld
 
-    if (naam === '' || email === '') {
-        alert('Vul alstublieft uw naam en e-mailadres in.');
-        return;
-    }
+// Aangepaste controle: bericht/connectie is nu ook verplicht!
+if (naam === '' || email === '' || bericht === '') {
+    alert('Vul alstublieft uw naam, e-mailadres en uw connectie met Dineke in.');
+    return;
+}
 
     bevestigKnop.disabled = true;
     const origineleTekst = bevestigKnop.innerText;
