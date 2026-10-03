@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digitaal fotoboek</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #1a1a1a;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 12px;
+    }
+    /* Zo groot mogelijk in 4:3, zonder dat je hoeft te scrollen */
+    .fotoboek {
+      width: min(100%, calc((100vh - 24px) * 4 / 3));
+      width: min(100%, calc((100dvh - 24px) * 4 / 3));
+    }
+    /* Haalt de maximale breedte van 1200 pixels van Fotofabriek weg */
+    .fotoboek .ff-embedded-preview {
+      max-width: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="fotoboek">
+<script id="_ffpre_B2E5E0421C" type="text/javascript">
+var _ffpre=_ffpre||{};_ffpre.link=document.createElement('link');_ffpre.link.id="ff-custom-stylesheet";_ffpre.link.rel="stylesheet";_ffpre.link.type="text/css";_ffpre.link.href="https://www.fotofabriek.nl/tools/preview/css/preview.embedded.min.css";_ffpre.link.media="all";_ffpre.b='<div class="ff-embedded-preview"><iframe src="https://www.fotofabriek.nl/preview/?id=B2E5E0421C2BFF2DF20C4B6B83A65011&embedded=true" id="B2E5E0421C" scrolling="no" height="600" width="800"></iframe></div>';document.getElementById('_ffpre_B2E5E0421C').insertAdjacentHTML('afterend',_ffpre.b);
+document.getElementsByTagName('head')[0].appendChild(_ffpre.link);</script>
+  </div>
+</body>
+</html>
